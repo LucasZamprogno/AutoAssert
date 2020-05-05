@@ -100,6 +100,7 @@ public class FileWatcher extends Thread {
     public String scuffedGenAssertions(JSONObject observed) {
         String name = this.selected.selected;
         String type = (String) observed.get("type");
+        String lsp = System.getProperty("line.separator");
         String val;
         StringBuilder toReturn = new StringBuilder();
         switch (type) {
@@ -107,48 +108,48 @@ public class FileWatcher extends Thread {
             case "number":
             case "string":
                 val = (String) observed.get("value");
-                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;\n");
-                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);\n");
-                toReturn.append(this.selected.whitespace + "expect(varName).to.equal(" + val + ");\n");
+                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;" + lsp);
+                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);" + lsp);
+                toReturn.append(this.selected.whitespace + "expect(varName).to.equal(" + val + ");" + lsp);
                 break;
             case "symbol":
                 val = (String) observed.get("value"); // ???
-                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;\n");
-                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);\n");
-                toReturn.append(this.selected.whitespace + "expect(varName.toString()).to.equal(" + val + ");\n");
+                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;" + lsp);
+                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);" + lsp);
+                toReturn.append(this.selected.whitespace + "expect(varName.toString()).to.equal(" + val + ");" + lsp);
                 break;
             case "function":
-                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;\n");
-                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);\n");
+                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;" + lsp);
+                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);" + lsp);
                 break;
             case "null":
             case "undefined":
-                toReturn.append(this.selected.whitespace + "expect(varName).to.not.exist;\n");
-                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);\n");
+                toReturn.append(this.selected.whitespace + "expect(varName).to.not.exist;" + lsp);
+                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);" + lsp);
                 break;
             case "array":
                 JSONArray arr = (JSONArray) observed.get("value");
                 val = arr.toString();
-                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;\n");
-                toReturn.append(this.selected.whitespace + "expect(Array.isArray(varName)).to.be.true;\n");
-                toReturn.append(this.selected.whitespace + "expect(varName).to.deep.equal(" + val + ");\n");
+                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;" + lsp);
+                toReturn.append(this.selected.whitespace + "expect(Array.isArray(varName)).to.be.true;" + lsp);
+                toReturn.append(this.selected.whitespace + "expect(varName).to.deep.equal(" + val + ");" + lsp);
                 break;
             case "set":
                 JSONArray setArr = (JSONArray) observed.get("value");
                 val = setArr.toString();
-                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;\n");
-                toReturn.append(this.selected.whitespace + "expect(varName instanceof Set).to.be.true;\n");
-                toReturn.append(this.selected.whitespace + "expect(Array.from(varName)).to.deep.equal(" + val + ");\n"); // No idea if this works
+                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;" + lsp);
+                toReturn.append(this.selected.whitespace + "expect(varName instanceof Set).to.be.true;" + lsp);
+                toReturn.append(this.selected.whitespace + "expect(Array.from(varName)).to.deep.equal(" + val + ");" + lsp); // No idea if this works
                 break;
             case "object":
                 JSONObject subObj = new JSONObject(observed.get("value"));
-                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;\n");
-                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);\n");
-                toReturn.append(this.selected.whitespace + "expect(varName).to.deep.equal(" + subObj.toString() + ");\n");
+                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;" + lsp);
+                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);" + lsp);
+                toReturn.append(this.selected.whitespace + "expect(varName).to.deep.equal(" + subObj.toString() + ");" + lsp);
                 break;
             default:
                 // Should never happen
-                toReturn.append(this.selected.whitespace + "// Assertion generation failed\n");
+                toReturn.append(this.selected.whitespace + "// Assertion generation failed" + lsp);
         }
         String out = toReturn.toString();
         out = out.replaceAll("varName", name);
