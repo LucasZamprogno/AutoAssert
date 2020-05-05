@@ -10,7 +10,7 @@ import java.util.List;
 
 public class Util {
     public static String spliceInto(String base, String toInsert, int index) {
-        List<String> lines = new ArrayList<String>(Arrays.asList(base.split(System.getProperty("line.separator"))));
+        List<String> lines = Util.toLines(base);
         List<String> start = lines.subList(0, index + 1); // Could have some index oob issues
         List<String> end = lines.subList(index + 1, lines.size());
 
@@ -24,7 +24,7 @@ public class Util {
     // Modified from https://stackoverflow.com/questions/2509170/is-there-an-easy-way-to-concatenate-several-lines-of-text-into-a-string-without
     public static String createString(List<String> lines) {
         String lsp = System.getProperty("line.separator");
-        StringBuilder sb = new StringBuilder ();
+        StringBuilder sb = new StringBuilder();
         for (String line : lines) {
             sb.append(line).append(lsp);
         }
@@ -39,5 +39,21 @@ public class Util {
             e.printStackTrace();
             return "";
         }
+    }
+
+    public static String getWhitespace(String line) {
+        StringBuilder out = new StringBuilder();
+        for (char c : line.toCharArray()) {
+            if (Character.isWhitespace(c)) {
+                out.append(c);
+            } else {
+                break;
+            }
+        }
+        return out.toString();
+    }
+
+    public static List<String> toLines(String in) {
+        return new ArrayList<String>(Arrays.asList(in.split(System.getProperty("line.separator"))));
     }
 }

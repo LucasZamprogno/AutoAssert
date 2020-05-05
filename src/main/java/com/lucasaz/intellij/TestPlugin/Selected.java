@@ -5,12 +5,16 @@ public class Selected {
     int col;
     String selected;
     String tsFilePath;
+    String originalFile;
+    String whitespace;
 
-    public Selected(int line, int col, String selected, String tsFilePath) {
+    public Selected(int line, int col, String selected, String tsFilePath, String originalFile, String whitespace) {
         this.line = line;
         this.col = col;
         this.selected = selected;
         this.tsFilePath = tsFilePath;
+        this.originalFile = originalFile;
+        this.whitespace = whitespace;
     }
 
     public int getLine() {

@@ -19,14 +19,12 @@ public class FileWatcher extends Thread {
     private Selected selected;
     private Path path;
     private String target;
-    private String originalFile;
     private AtomicBoolean stop;
 
-    public FileWatcher(Selected selected, String target, String originalFile) {
+    public FileWatcher(Selected selected, String target) {
             this.selected = selected;
             this.path = Paths.get(selected.tsFilePath);
             this.target = target;
-            this.originalFile = originalFile;
             this.stop = new AtomicBoolean(false);
     }
 
@@ -95,7 +93,7 @@ public class FileWatcher extends Thread {
 
     private String makeFinalFile(JSONObject observed) {
         String assertions = this.scuffedGenAssertions(observed);
-        return Util.spliceInto(this.originalFile, assertions, this.selected.line);
+        return Util.spliceInto(this.selected.originalFile, assertions, this.selected.line);
     }
 
     // This needs lots of testing!
@@ -103,61 +101,58 @@ public class FileWatcher extends Thread {
         String name = this.selected.selected;
         String type = (String) observed.get("type");
         String val;
-        String toReturn;
+        StringBuilder toReturn = new StringBuilder();
         switch (type) {
             case "boolean":
             case "number":
             case "string":
                 val = (String) observed.get("value");
-                toReturn = "expect(varName).to.exist;\n" +
-                        "expect(typeof varName).to.equal(resType);\n" +
-                        "expect(varName).to.equal(" + val + ");";
+                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;\n");
+                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);\n");
+                toReturn.append(this.selected.whitespace + "expect(varName).to.equal(" + val + ");\n");
                 break;
             case "symbol":
                 val = (String) observed.get("value"); // ???
-                toReturn = "expect(varName).to.exist;\n" +
-                        "expect(typeof varName).to.equal(resType);\n" +
-                        "expect(varName.toString()).to.equal(" + val + ");";
-                break;
-            case "undefined":
-                toReturn = "expect(varName).to.not.exist;\n" +
-                        "expect(typeof varName).to.equal(resType);";
+                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;\n");
+                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);\n");
+                toReturn.append(this.selected.whitespace + "expect(varName.toString()).to.equal(" + val + ");\n");
                 break;
             case "function":
-                toReturn = "expect(varName).to.exist;\n" +
-                        "expect(typeof varName).to.equal(resType);";
+                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;\n");
+                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);\n");
                 break;
             case "null":
-                val = (String) observed.get("value"); // ???
-                toReturn = "expect(varName).to.not.exist;\n" +
-                        "expect(varName).to.equal(" + val + ");";
+            case "undefined":
+                toReturn.append(this.selected.whitespace + "expect(varName).to.not.exist;\n");
+                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);\n");
                 break;
             case "array":
                 JSONArray arr = (JSONArray) observed.get("value");
                 val = arr.toString();
-                toReturn = "expect(varName).to.exist;\n" +
-                        "expect(Array.isArray(varName)).to.be.true;\n" +
-                        "expect(varName).to.deep.equal(" + val + ");";
+                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;\n");
+                toReturn.append(this.selected.whitespace + "expect(Array.isArray(varName)).to.be.true;\n");
+                toReturn.append(this.selected.whitespace + "expect(varName).to.deep.equal(" + val + ");\n");
                 break;
             case "set":
                 JSONArray setArr = (JSONArray) observed.get("value");
                 val = setArr.toString();
-                toReturn = "expect(varName).to.exist;\n" +
-                        "expect(varName instanceof Set).to.be.true;\n" +
-                        "expect(Array.from(varName)).to.deep.equal(" + val + ");"; // No idea if this works
+                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;\n");
+                toReturn.append(this.selected.whitespace + "expect(varName instanceof Set).to.be.true;\n");
+                toReturn.append(this.selected.whitespace + "expect(Array.from(varName)).to.deep.equal(" + val + ");\n"); // No idea if this works
                 break;
             case "object":
                 JSONObject subObj = new JSONObject(observed.get("value"));
-                toReturn = "expect(varName).to.exist;\n" +
-                        "expect(typeof varName).to.equal(resType);\n" +
-                        "expect(varName).to.deep.equal(${elem.value});";
+                toReturn.append(this.selected.whitespace + "expect(varName).to.exist;\n");
+                toReturn.append(this.selected.whitespace + "expect(typeof varName).to.equal(resType);\n");
+                toReturn.append(this.selected.whitespace + "expect(varName).to.deep.equal(" + subObj.toString() + ");\n");
                 break;
             default:
                 // Should never happen
-                toReturn = "// Assertion generation failed";
+                toReturn.append(this.selected.whitespace + "// Assertion generation failed\n");
         }
-        toReturn = toReturn.replaceAll("varName", name);
-        return toReturn.replaceAll("resType", type);
+        String out = toReturn.toString();
+        out = out.replaceAll("varName", name);
+        return out.replaceAll("resType", type);
     }
 
 }

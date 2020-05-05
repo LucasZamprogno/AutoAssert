@@ -39,8 +39,7 @@ public class TestAction extends AnAction
         this.e = e;
         this.project = e.getData(LangDataKeys.PROJECT);
         this.selected = this.makeSelectedInformation();
-        String content = this.getFileContent();
-        FileWatcher fw = new FileWatcher(this.selected, ".testOutput", content);
+        FileWatcher fw = new FileWatcher(this.selected, ".testOutput");
 
         RunnerAndConfigurationSettings racs = this.createRunConfig(e);
         Executor executor = DefaultRunExecutor.getRunExecutorInstance();
@@ -104,25 +103,17 @@ public class TestAction extends AnAction
         int colZeroInd = col - 1;
         String selected = caretModel.getPrimaryCaret().getSelectedText();
 
-        String filePathTs = this.getFilePathString();
+        String tsFilePath = this.getFilePathString();
+        String content = Util.pathToFileContent(Paths.get(tsFilePath));
+        String whitespace = Util.getWhitespace(Util.toLines(content).get(line));
 
-        return new Selected(line, colZeroInd, selected, filePathTs);
+        return new Selected(line, colZeroInd, selected, tsFilePath, content, whitespace);
     }
 
     private String getFilePathString() {
         Document currentDoc = FileEditorManager.getInstance(this.project).getSelectedTextEditor().getDocument();
         VirtualFile currentFile = FileDocumentManager.getInstance().getFile(currentDoc);
         return currentFile.getPath();
-    }
-
-    private String getFileContent() {
-        String str = "";
-        try {
-            str = new String(Files.readAllBytes(Paths.get(this.getFilePathString())), StandardCharsets.UTF_8);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        return str;
     }
 
     /**
