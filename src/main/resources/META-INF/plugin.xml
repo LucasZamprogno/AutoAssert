@@ -1,0 +1,40 @@
+<idea-plugin>
+  <id>com.your.company.unique.plugin.id</id>
+  <name>Test WIP</name>
+  <version>1.0</version>
+  <vendor email="lucasaz@cs.ubc.ca" url="https://www.cs.ubc.ca/">UBC Computer Science</vendor>
+
+  <description><![CDATA[
+      Description. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    ]]></description>
+
+  <change-notes><![CDATA[
+      None. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    ]]>
+  </change-notes>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+  <idea-version since-build="193.0"/>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+       on how to target different products -->
+  <!-- uncomment to enable plugin in all products
+  <depends>com.intellij.modules.lang</depends>
+  -->
+
+  <extensions defaultExtensionNs="com.intellij">
+    <stepsBeforeRunProvider implementation="com.lucasaz.intellij.TestPlugin.CustomBeforeRunTaskProvider"></stepsBeforeRunProvider>
+    <!-- Add your extensions here -->
+  </extensions>
+
+  <actions>
+    <!-- Add Ask question action to Tools Menu -->
+    <action id="StackOverflow.Search.Editor"
+            class="com.lucasaz.intellij.TestPlugin.TestAction"
+            text="AAAAAAAAAAAAAAAAAAAAAAA"
+            description="AAAAAAAAAAAAAAAAAAAAAAAAAAAA">
+      <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+    </action>
+  </actions>
+
+</idea-plugin>
