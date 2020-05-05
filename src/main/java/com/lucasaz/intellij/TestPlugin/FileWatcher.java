@@ -3,29 +3,32 @@
 
 package com.lucasaz.intellij.TestPlugin;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.google.gson.JsonArray;
-import org.assertj.core.internal.bytebuddy.implementation.bytecode.Throw;
+import com.intellij.openapi.application.NonBlockingReadAction;
+import com.intellij.openapi.application.ReadAction;
+import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 
-public class FileWatcher extends Thread {
+public class FileWatcher extends Thread implements Runnable {
     private Selected selected;
     private Path path;
     private String target;
     private AtomicBoolean stop;
+    private WatchService watcher;
 
-    public FileWatcher(Selected selected, String target) {
+    public FileWatcher(Selected selected, String target, WatchService watcher) {
             this.selected = selected;
             this.path = Paths.get(selected.tsFilePath);
             this.target = target;
             this.stop = new AtomicBoolean(false);
+            this.watcher = watcher;
     }
 
     public boolean isStopped() { return stop.get(); }
@@ -34,37 +37,35 @@ public class FileWatcher extends Thread {
     @Override
     public void run() {
         try {
-            System.out.println("Started");
-            WatchService watcher = FileSystems.getDefault().newWatchService();
-            this.path.getParent().register(watcher, StandardWatchEventKinds.ENTRY_CREATE);
-            while (!isStopped()) {
-                WatchKey key;
-                key = watcher.poll();
-                if (key == null) {
-                    Thread.sleep(50);
-                    continue;
-                }
+            System.out.println("Running");
+            WatchKey key;
+            key = this.watcher.poll();
+            if (key == null) {
+                NonBlockingReadAction<Void> res = ReadAction.nonBlocking(this);
+                res.submit(NonUrgentExecutor.getInstance());
+                return;
+            }
 
-                for (WatchEvent<?> event : key.pollEvents()) {
-                    WatchEvent.Kind<?> kind = event.kind();
+            for (WatchEvent<?> event : key.pollEvents()) {
+                WatchEvent.Kind<?> kind = event.kind();
 
-                    @SuppressWarnings("unchecked")
-                    WatchEvent<Path> ev = (WatchEvent<Path>) event;
-                    Path filename = ev.context();
+                @SuppressWarnings("unchecked")
+                WatchEvent<Path> ev = (WatchEvent<Path>) event;
+                Path filename = ev.context();
 
-                    if (kind == java.nio.file.StandardWatchEventKinds.ENTRY_CREATE
-                            && filename.toString().equals(this.target)) {
-                        System.out.println("~~~~~~~ HIT ~~~~~~~");
-                        this.onFileCreate();
-                        return;
-                    }
+                if (kind == java.nio.file.StandardWatchEventKinds.ENTRY_CREATE
+                        && filename.toString().equals(this.target)) {
+                    System.out.println("~~~~~~~ HIT ~~~~~~~");
+                    Thread.sleep(20);
+                    this.onFileCreate();
+                    return;
                 }
-                boolean valid = key.reset();
-                if (!valid)
-                {
-                    break;
-                }
-                Thread.sleep(50);
+            }
+            boolean valid = key.reset();
+            if (valid) {
+                NonBlockingReadAction<Void> res = ReadAction.nonBlocking(this);
+                res.submit(NonUrgentExecutor.getInstance());
+                return;
             }
         } catch (Throwable e) {
             System.out.println("aaaaaa");
@@ -76,14 +77,15 @@ public class FileWatcher extends Thread {
         Path filepath = Paths.get(this.path.getParent().toString(), this.target);
         String runResult = "";
         runResult = Util.pathToFileContent(filepath);
+        System.out.println(runResult);
         JSONObject res = new JSONObject(runResult);
 
         try {
+            new File(filepath.toString()).delete(); // Delete .testOutput
             String wouldBeAssertedFile = this.makeFinalFile(res);
             FileWriter fw = new FileWriter(this.path.toString());
             fw.write(wouldBeAssertedFile);
             fw.close();
-            System.out.println("RESTORED");
         } catch (IOException err) {
             System.out.println(err.getMessage());
         } catch (Throwable e) {

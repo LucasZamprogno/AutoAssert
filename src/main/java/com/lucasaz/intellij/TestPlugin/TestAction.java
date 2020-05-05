@@ -39,7 +39,15 @@ public class TestAction extends AnAction
         this.e = e;
         this.project = e.getData(LangDataKeys.PROJECT);
         this.selected = this.makeSelectedInformation();
-        FileWatcher fw = new FileWatcher(this.selected, ".testOutput");
+        FileWatcher fw;
+        try {
+            WatchService watcher = FileSystems.getDefault().newWatchService();
+            Paths.get(this.selected.tsFilePath).getParent().register(watcher, StandardWatchEventKinds.ENTRY_CREATE);
+            fw = new FileWatcher(this.selected, ".testOutput", watcher);
+        } catch (IOException err) {
+            System.err.println("Failed to setup file watcher");
+            return;
+        }
 
         RunnerAndConfigurationSettings racs = this.createRunConfig(e);
         Executor executor = DefaultRunExecutor.getRunExecutorInstance();
