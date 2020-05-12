@@ -13,7 +13,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,10 +50,9 @@ public class CustomBeforeRunTaskProvider extends BeforeRunTaskProvider<CustomBef
     @Override
     public boolean executeTask(@NotNull DataContext dataContext, @NotNull RunConfiguration runConfiguration, @NotNull ExecutionEnvironment executionEnvironment, @NotNull CustomBeforeRunTask beforeRunTask) {
         Selected dt = beforeRunTask.getData();
-        if (dt == null) {
-            return true;
+        if (dt != null) {
+            this.doInjection(dt);
         }
-        this.doInjection(dt);
         return true;
     }
 
@@ -73,18 +71,6 @@ public class CustomBeforeRunTaskProvider extends BeforeRunTaskProvider<CustomBef
         } catch (IOException err) {
             System.out.println(err.getMessage());
         }
-        return; // just for breakpoints
-    }
-
-
-    // Modified from https://stackoverflow.com/questions/2509170/is-there-an-easy-way-to-concatenate-several-lines-of-text-into-a-string-without
-    public String createString(List<String> lines) {
-        String lsp = System.getProperty("line.separator");
-        StringBuilder sb = new StringBuilder ();
-        for (String line : lines) {
-            sb.append(line).append(lsp);
-        }
-        return sb.toString();
     }
 
     private List<String> createInjectionStringList(String varName)
@@ -100,7 +86,6 @@ public class CustomBeforeRunTaskProvider extends BeforeRunTaskProvider<CustomBef
             res.add(log);
             return res;
         } catch (Exception err) {
-            // Deal with error handling later
             return new ArrayList<>();
         }
     }

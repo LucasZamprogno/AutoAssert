@@ -1,19 +1,16 @@
-// TODO Fix injection strings
-// TODO Get string insertion working/refactored
-
 package com.lucasaz.intellij.TestPlugin;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.intellij.openapi.application.NonBlockingReadAction;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class FileWatcher extends Thread implements Runnable {
@@ -22,8 +19,18 @@ public class FileWatcher extends Thread implements Runnable {
     private String target;
     private AtomicBoolean stop;
     private WatchService watcher;
+    private static FileWatcher instance = null;
 
-    public FileWatcher(Selected selected, String target, WatchService watcher) {
+    public static FileWatcher getInstance(Selected selected, String target, WatchService watcher) {
+        if (FileWatcher.instance != null) {
+            instance.stopRequeue();
+        }
+        FileWatcher.instance = new FileWatcher(selected, target, watcher);
+        return FileWatcher.instance;
+
+    }
+
+    private FileWatcher(Selected selected, String target, WatchService watcher) {
             this.selected = selected;
             this.path = Paths.get(selected.tsFilePath);
             this.target = target;
@@ -31,18 +38,15 @@ public class FileWatcher extends Thread implements Runnable {
             this.watcher = watcher;
     }
 
-    public boolean isStopped() { return stop.get(); }
-    public void stopThread() { stop.set(true); }
+    public void stopRequeue() { stop.set(true); }
 
     @Override
     public void run() {
         try {
-            System.out.println("Running");
             WatchKey key;
             key = this.watcher.poll();
-            if (key == null) {
-                NonBlockingReadAction<Void> res = ReadAction.nonBlocking(this);
-                res.submit(NonUrgentExecutor.getInstance());
+            if (key == null && !this.stop.get()) {
+                reAdd();
                 return;
             }
 
@@ -55,25 +59,27 @@ public class FileWatcher extends Thread implements Runnable {
 
                 if (kind == java.nio.file.StandardWatchEventKinds.ENTRY_CREATE
                         && filename.toString().equals(this.target)) {
-                    System.out.println("~~~~~~~ HIT ~~~~~~~");
-                    Thread.sleep(20);
+                    Thread.sleep(20); // Make sure write is finished
                     this.onFileCreate();
                     return;
                 }
             }
             boolean valid = key.reset();
-            if (valid) {
-                NonBlockingReadAction<Void> res = ReadAction.nonBlocking(this);
-                res.submit(NonUrgentExecutor.getInstance());
-                return;
+            if (valid && !this.stop.get()) {
+                reAdd();
             }
         } catch (Throwable e) {
-            System.out.println("aaaaaa");
-            System.out.println(e.getMessage());
+            System.err.println("Error in FileWatcher");
+            System.err.println(e.getMessage());
         }
     }
 
-    public void onFileCreate() {
+    private void reAdd() {
+        NonBlockingReadAction<Void> res = ReadAction.nonBlocking(this);
+        res.submit(NonUrgentExecutor.getInstance());
+    }
+
+    private void onFileCreate() {
         Path filepath = Paths.get(this.path.getParent().toString(), this.target);
         String runResult = "";
         runResult = Util.pathToFileContent(filepath);
@@ -99,7 +105,7 @@ public class FileWatcher extends Thread implements Runnable {
     }
 
     // This needs lots of testing!
-    public String scuffedGenAssertions(JSONObject observed) {
+    private String scuffedGenAssertions(JSONObject observed) {
         String name = this.selected.selected;
         String type = (String) observed.get("type");
         String lsp = System.getProperty("line.separator");
@@ -157,7 +163,6 @@ public class FileWatcher extends Thread implements Runnable {
         out = out.replaceAll("varName", name);
         return out.replaceAll("resType", type);
     }
-
 }
 
 

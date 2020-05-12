@@ -17,9 +17,9 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.MapDataContext;
 import com.intellij.util.concurrency.NonUrgentExecutor;
+
 import java.io.IOException;
 import java.lang.reflect.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 
@@ -43,7 +43,7 @@ public class TestAction extends AnAction
         try {
             WatchService watcher = FileSystems.getDefault().newWatchService();
             Paths.get(this.selected.tsFilePath).getParent().register(watcher, StandardWatchEventKinds.ENTRY_CREATE);
-            fw = new FileWatcher(this.selected, ".testOutput", watcher);
+            fw = FileWatcher.getInstance(this.selected, ".testOutput", watcher);
         } catch (IOException err) {
             System.err.println("Failed to setup file watcher");
             return;
@@ -51,22 +51,22 @@ public class TestAction extends AnAction
 
         RunnerAndConfigurationSettings racs = this.createRunConfig(e);
         Executor executor = DefaultRunExecutor.getRunExecutorInstance();
-        ExecutionUtil.runConfiguration(racs, executor); // Old version
+        ExecutionUtil.runConfiguration(racs, executor);
         NonBlockingReadAction<Void> res = ReadAction.nonBlocking(fw);
         res.submit(NonUrgentExecutor.getInstance());
     }
 
-    public RunnerAndConfigurationSettings createRunConfig(AnActionEvent e) {
-        ConfigurationType type = ConfigurationTypeUtil.findConfigurationType("mocha-javascript-test-runner");
+    private RunnerAndConfigurationSettings createRunConfig(AnActionEvent e) {
         MapDataContext dataContext = new MapDataContext();
         dataContext.put(CommonDataKeys.PROJECT, this.project);
         dataContext.put(Location.DATA_KEY, PsiLocation.fromPsiElement(e.getData(LangDataKeys.PSI_ELEMENT)));
         List<RunConfigurationProducer<?>> tmp = RunConfigurationProducer.getProducers(this.project);
         RunConfigurationProducer<?> runConfProd = null;
         for (RunConfigurationProducer<?> rcp : tmp) {
-            if (rcp.getConfigurationType().equals(type)) {
+            String packageName = rcp.toString().split("@")[0];
+            if (packageName.equals("com.jetbrains.nodejs.mocha.execution.MochaRunConfigurationProducer")) {
                 runConfProd = rcp;
-                break; // quick hack, need to skip Kotlin
+                break;
             }
         }
 
@@ -82,7 +82,7 @@ public class TestAction extends AnAction
         return racs;
     }
 
-    public BeforeRunTask<?> createCompileBefore(RunnerAndConfigurationSettings racs) {
+    private BeforeRunTask<?> createCompileBefore(RunnerAndConfigurationSettings racs) {
         BeforeRunTaskProvider<?> mbrtp = BeforeRunTaskProvider.EXTENSION_POINT_NAME.getExtensionList(this.project).get(10);
         BeforeRunTask<?> mbrt = mbrtp.createTask(racs.getConfiguration());
         try {
@@ -94,7 +94,7 @@ public class TestAction extends AnAction
         return  mbrt;
     }
 
-    public BeforeRunTask<?> createInjectionBeforeRun(RunnerAndConfigurationSettings racs) {
+    private BeforeRunTask<?> createInjectionBeforeRun(RunnerAndConfigurationSettings racs) {
         CustomBeforeRunTaskProvider cbrtp = new CustomBeforeRunTaskProvider();
         BeforeRunTask<?> customTask = cbrtp.createTask(racs.getConfiguration(), this.selected);
         return customTask;
@@ -136,13 +136,3 @@ public class TestAction extends AnAction
         e.getPresentation().setEnabledAndVisible(caretModel.getCurrentCaret().hasSelection());
     }
 }
-        /*
-        try {
-            ExecutionEnvironmentBuilder eeb =  ExecutionEnvironmentBuilder.create(executor, racs);
-            ExecutionEnvironment ee = eeb.build();
-            ProgramRunner pr = ee.getRunner();
-            pr.execute(ee);
-        } catch (ExecutionException err) {
-            System.out.println("Don't know how this happens yet");
-        }
-         */
