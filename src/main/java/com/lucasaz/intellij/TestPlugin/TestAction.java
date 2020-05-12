@@ -85,13 +85,17 @@ public class TestAction extends AnAction
     private BeforeRunTask<?> createCompileBefore(RunnerAndConfigurationSettings racs) {
         BeforeRunTaskProvider<?> mbrtp = BeforeRunTaskProvider.EXTENSION_POINT_NAME.getExtensionList(this.project).get(10);
         BeforeRunTask<?> mbrt = mbrtp.createTask(racs.getConfiguration());
+        String tsconfigPath = Util.findNearestTsconfig(this.selected.tsFilePath, this.project);
+        if (tsconfigPath == null) {
+            return null;
+        }
         try {
             Method setConfigPath = mbrt.getClass().getDeclaredMethod("setConfigPath", String.class);
             setConfigPath.invoke(mbrt, "D:\\Documents\\UBC\\310\\project-resources\\implementation\\tsconfig.json");
         } catch (Exception err) {
             System.out.println("Error invoking setConfigPath: " + err.getMessage());
         }
-        return  mbrt;
+        return mbrt;
     }
 
     private BeforeRunTask<?> createInjectionBeforeRun(RunnerAndConfigurationSettings racs) {

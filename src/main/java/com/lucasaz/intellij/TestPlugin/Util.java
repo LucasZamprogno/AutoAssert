@@ -1,9 +1,13 @@
 package com.lucasaz.intellij.TestPlugin;
 
+import com.intellij.openapi.project.Project;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -55,5 +59,39 @@ public class Util {
 
     public static List<String> toLines(String in) {
         return new ArrayList<String>(Arrays.asList(in.split(System.getProperty("line.separator"))));
+    }
+
+    public static String findNearestTsconfig(String testFile, Project project) {
+        return Util.findNearestTsconfigRec(Paths.get(testFile).getParent(), Paths.get(project.getBasePath()));
+    }
+
+    @Nullable
+    private static String findNearestTsconfigRec(Path currentDir, Path projectRoot) {
+        Path target = Paths.get(currentDir.toString(), "tsconfig.json");
+        if (Files.exists(target)) {
+            return target.toString();
+        }
+        if (currentDir.equals(projectRoot)) {
+            return null;
+        }
+        return findNearestTsconfigRec(currentDir.getParent(), projectRoot);
+    }
+
+    // Current unused and untested, for menu dropdown
+    public static List<String> findAllParentTsconfigs(String testFile, Project project) {
+        List<String> startList = new ArrayList<>();
+        return Util.findAllParentTsconfigsRec(Paths.get(testFile).getParent(), Paths.get(project.getBasePath()), startList);
+    }
+
+    @Nullable
+    private static List<String> findAllParentTsconfigsRec(Path currentDir, Path projectRoot, List<String> acc) {
+        Path target = Paths.get(currentDir.toString(), "tsconfig.json");
+        if (Files.exists(target)) {
+            acc.add(target.toString());
+        }
+        if (currentDir.equals(projectRoot)) {
+            return acc;
+        }
+        return findAllParentTsconfigsRec(currentDir.getParent(), projectRoot, acc);
     }
 }
