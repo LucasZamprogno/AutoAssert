@@ -23,7 +23,8 @@
   -->
 
   <extensions defaultExtensionNs="com.intellij">
-    <stepsBeforeRunProvider implementation="com.lucasaz.intellij.TestPlugin.CustomBeforeRunTaskProvider"></stepsBeforeRunProvider>
+    <stepsBeforeRunProvider implementation="com.lucasaz.intellij.TestPlugin.CustomBeforeRunTaskProvider"/>
+    <projectConfigurable instance="com.lucasaz.intellij.TestPlugin.TestSettingsConfigurable" id="test.settings"/>
     <!-- Add your extensions here -->
   </extensions>
 
