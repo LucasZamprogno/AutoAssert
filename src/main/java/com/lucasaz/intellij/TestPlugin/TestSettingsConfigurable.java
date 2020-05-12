@@ -1,7 +1,7 @@
 package com.lucasaz.intellij.TestPlugin;
 
+import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.options.NonDefaultProjectConfigurable;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.Nls;
@@ -10,16 +10,14 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
-/**
- * @author: Fedor.Korotkov
- */
 public class TestSettingsConfigurable implements SearchableConfigurable {
+    public static final String PATH_KEY = "TestPluginTsconfigPathKey";
+    public static final String BUILD_KEY = "TestPluginShouldBuildKey";
     private TestSettingsForm mySettingsPane;
-    private final Project myProject;
-    private String path = "";
+    private PropertiesComponent settings;
 
     public TestSettingsConfigurable(Project project) {
-        myProject = project;
+        settings = PropertiesComponent.getInstance(project);
     }
 
     @NotNull
@@ -39,6 +37,13 @@ public class TestSettingsConfigurable implements SearchableConfigurable {
     public JComponent createComponent() {
         if (mySettingsPane == null) {
             mySettingsPane = new TestSettingsForm();
+            String saved = this.settings.getValue(PATH_KEY);
+            if (saved == null) {
+                this.settings.setValue(PATH_KEY, "");
+                this.mySettingsPane.setPath("");
+            } else {
+                mySettingsPane.setPath(saved);
+            }
         }
         reset();
         return mySettingsPane.getPanel();
@@ -46,11 +51,12 @@ public class TestSettingsConfigurable implements SearchableConfigurable {
 
     @Override
     public boolean isModified() {
-        return false;
+        return !this.mySettingsPane.getPath().equals(this.settings.getValue(PATH_KEY));
     }
 
     @Override
     public void apply() throws ConfigurationException {
-        this.path = mySettingsPane.getPath();
+        this.settings.setValue(PATH_KEY, mySettingsPane.getPath());
+        // this.path = mySettingsPane.getPath();
     }
 }

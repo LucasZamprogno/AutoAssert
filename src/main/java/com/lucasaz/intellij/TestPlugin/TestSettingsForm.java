@@ -13,4 +13,8 @@ public class TestSettingsForm {
     public JComponent getPanel() {
         return jPanel;
     }
+
+    public void setPath(String path) {
+        this.textField1.setText(path);
+    }
 }
