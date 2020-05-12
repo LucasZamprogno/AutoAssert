@@ -4,19 +4,15 @@ import com.intellij.execution.*;
 import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.actions.ConfigurationFromContext;
 import com.intellij.execution.actions.RunConfigurationProducer;
-import com.intellij.execution.configurations.*;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.ExecutionUtil;
 import com.intellij.openapi.actionSystem.*;
-import com.intellij.openapi.application.NonBlockingReadAction;
-import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.MapDataContext;
-import com.intellij.util.concurrency.NonUrgentExecutor;
 
 import java.io.IOException;
 import java.lang.reflect.*;
@@ -29,6 +25,7 @@ public class TestAction extends AnAction
     private Project project;
     private AnActionEvent e;
     private Selected selected;
+    private FileWatcher fw;
     /**
      * Convert selected text to a URL friendly string.
      * @param e
@@ -38,28 +35,39 @@ public class TestAction extends AnAction
     {
         this.e = e;
         this.project = e.getData(LangDataKeys.PROJECT);
-        this.selected = this.makeSelectedInformation();
-        FileWatcher fw;
+
         try {
-            WatchService watcher = FileSystems.getDefault().newWatchService();
-            Paths.get(this.selected.tsFilePath).getParent().register(watcher, StandardWatchEventKinds.ENTRY_CREATE);
-            fw = FileWatcher.getInstance(this.selected, ".testOutput", watcher);
-        } catch (IOException err) {
-            System.err.println("Failed to setup file watcher");
+            this.selected = this.makeSelectedInformation();
+        } catch (NullPointerException | IOException err) {
+            System.err.println("Failed to get selected text from editor");
+            System.err.println(err.getMessage());
             return;
         }
 
-        RunnerAndConfigurationSettings racs = this.createRunConfig(e);
-        Executor executor = DefaultRunExecutor.getRunExecutorInstance();
-        ExecutionUtil.runConfiguration(racs, executor);
-        NonBlockingReadAction<Void> res = ReadAction.nonBlocking(fw);
-        res.submit(NonUrgentExecutor.getInstance());
+        try {
+            WatchService watcher = FileSystems.getDefault().newWatchService();
+            Paths.get(this.selected.tsFilePath).getParent().register(watcher, StandardWatchEventKinds.ENTRY_CREATE);
+            this.fw = FileWatcher.getInstance(this.selected, ".testOutput", watcher);
+        } catch (IOException err) {
+            System.err.println("Failed to setup file watcher");
+            System.err.println(err.getMessage());
+            return;
+        }
+
+        try {
+            RunnerAndConfigurationSettings racs = this.createRunConfig(e);
+            Executor executor = DefaultRunExecutor.getRunExecutorInstance();
+            ExecutionUtil.runConfiguration(racs, executor);
+        } catch (PluginException err) {
+            System.err.println(err.getMessage());
+        }
     }
 
-    private RunnerAndConfigurationSettings createRunConfig(AnActionEvent e) {
+    private RunnerAndConfigurationSettings createRunConfig(AnActionEvent e) throws PluginException {
         MapDataContext dataContext = new MapDataContext();
         dataContext.put(CommonDataKeys.PROJECT, this.project);
         dataContext.put(Location.DATA_KEY, PsiLocation.fromPsiElement(e.getData(LangDataKeys.PSI_ELEMENT)));
+
         List<RunConfigurationProducer<?>> tmp = RunConfigurationProducer.getProducers(this.project);
         RunConfigurationProducer<?> runConfProd = null;
         for (RunConfigurationProducer<?> rcp : tmp) {
@@ -70,8 +78,15 @@ public class TestAction extends AnAction
             }
         }
 
+        if (runConfProd == null) {
+            throw new PluginException("Couldn't find MochaRunConfigurationProducer");
+        }
+
         ConfigurationContext configurationContext = ConfigurationContext.getFromContext(dataContext);
         ConfigurationFromContext configurationFromContext = runConfProd.createConfigurationFromContext(configurationContext);
+        if (configurationFromContext == null) {
+            throw new PluginException("Failed to create Mocha Run Configuration");
+        }
         RunnerAndConfigurationSettings racs = configurationFromContext.getConfigurationSettings();
 
         List<BeforeRunTask<?>> tasks = new ArrayList<>();
@@ -82,29 +97,28 @@ public class TestAction extends AnAction
         return racs;
     }
 
-    private BeforeRunTask<?> createCompileBefore(RunnerAndConfigurationSettings racs) {
+    private BeforeRunTask<?> createCompileBefore(RunnerAndConfigurationSettings racs) throws PluginException {
         BeforeRunTaskProvider<?> mbrtp = BeforeRunTaskProvider.EXTENSION_POINT_NAME.getExtensionList(this.project).get(10);
         BeforeRunTask<?> mbrt = mbrtp.createTask(racs.getConfiguration());
         String tsconfigPath = Util.findNearestTsconfig(this.selected.tsFilePath, this.project);
         if (tsconfigPath == null) {
-            return null;
+            throw new PluginException("Failed to find tsconfig file between test file and project root");
         }
         try {
             Method setConfigPath = mbrt.getClass().getDeclaredMethod("setConfigPath", String.class);
-            setConfigPath.invoke(mbrt, "D:\\Documents\\UBC\\310\\project-resources\\implementation\\tsconfig.json");
+            setConfigPath.invoke(mbrt, tsconfigPath);
         } catch (Exception err) {
-            System.out.println("Error invoking setConfigPath: " + err.getMessage());
+            throw new PluginException("Failed to set tsconfig path for build", err);
         }
         return mbrt;
     }
 
     private BeforeRunTask<?> createInjectionBeforeRun(RunnerAndConfigurationSettings racs) {
         CustomBeforeRunTaskProvider cbrtp = new CustomBeforeRunTaskProvider();
-        BeforeRunTask<?> customTask = cbrtp.createTask(racs.getConfiguration(), this.selected);
-        return customTask;
+        return cbrtp.createTask(racs.getConfiguration(), this.selected, this.fw);
     }
 
-    private Selected makeSelectedInformation() {
+    private Selected makeSelectedInformation() throws NullPointerException, IOException {
         Editor editor = this.e.getRequiredData(CommonDataKeys.EDITOR);
         CaretModel caretModel = editor.getCaretModel();
         Caret caret = caretModel.getPrimaryCaret();
@@ -122,7 +136,7 @@ public class TestAction extends AnAction
         return new Selected(line, colZeroInd, selected, tsFilePath, content, whitespace);
     }
 
-    private String getFilePathString() {
+    private String getFilePathString() throws NullPointerException {
         Document currentDoc = FileEditorManager.getInstance(this.project).getSelectedTextEditor().getDocument();
         VirtualFile currentFile = FileDocumentManager.getInstance().getFile(currentDoc);
         return currentFile.getPath();

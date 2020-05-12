@@ -13,9 +13,12 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Util {
-    public static String spliceInto(String base, String toInsert, int index) {
+    public static String spliceInto(String base, String toInsert, int index) throws PluginException {
         List<String> lines = Util.toLines(base);
-        List<String> start = lines.subList(0, index + 1); // Could have some index oob issues
+        if (lines.size() < index + 1) {
+            throw new PluginException("Insertion line index somehow greater than file length");
+        }
+        List<String> start = lines.subList(0, index + 1);
         List<String> end = lines.subList(index + 1, lines.size());
 
         String endFile = Util.createString(start);
@@ -35,14 +38,8 @@ public class Util {
         return sb.toString();
     }
 
-    public static String pathToFileContent(Path filepath) {
-        try {
-            return new String(Files.readAllBytes(filepath), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            System.out.printf("FILE READ FAILED for " + filepath.toString());
-            e.printStackTrace();
-            return "";
-        }
+    public static String pathToFileContent(Path filepath) throws IOException {
+        return new String(Files.readAllBytes(filepath), StandardCharsets.UTF_8);
     }
 
     public static String getWhitespace(String line) {
