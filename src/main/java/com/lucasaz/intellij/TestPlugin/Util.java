@@ -1,17 +1,24 @@
 package com.lucasaz.intellij.TestPlugin;
 
+import com.intellij.openapi.project.Project;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class Util {
-    public static String spliceInto(String base, String toInsert, int index) {
+    public static String spliceInto(String base, String toInsert, int index) throws PluginException {
         List<String> lines = Util.toLines(base);
-        List<String> start = lines.subList(0, index + 1); // Could have some index oob issues
+        if (lines.size() < index + 1) {
+            throw new PluginException("Insertion line index somehow greater than file length");
+        }
+        List<String> start = lines.subList(0, index + 1);
         List<String> end = lines.subList(index + 1, lines.size());
 
         String endFile = Util.createString(start);
@@ -31,14 +38,8 @@ public class Util {
         return sb.toString();
     }
 
-    public static String pathToFileContent(Path filepath) {
-        try {
-            return new String(Files.readAllBytes(filepath), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            System.out.printf("FILE READ FAILED for " + filepath.toString());
-            e.printStackTrace();
-            return "";
-        }
+    public static String pathToFileContent(Path filepath) throws IOException {
+        return new String(Files.readAllBytes(filepath), StandardCharsets.UTF_8);
     }
 
     public static String getWhitespace(String line) {
@@ -55,5 +56,39 @@ public class Util {
 
     public static List<String> toLines(String in) {
         return new ArrayList<String>(Arrays.asList(in.split(System.getProperty("line.separator"))));
+    }
+
+    public static String findNearestTsconfig(String testFile, Project project) {
+        return Util.findNearestTsconfigRec(Paths.get(testFile).getParent(), Paths.get(project.getBasePath()));
+    }
+
+    @Nullable
+    private static String findNearestTsconfigRec(Path currentDir, Path projectRoot) {
+        Path target = Paths.get(currentDir.toString(), "tsconfig.json");
+        if (Files.exists(target)) {
+            return target.toString();
+        }
+        if (currentDir.equals(projectRoot)) {
+            return null;
+        }
+        return findNearestTsconfigRec(currentDir.getParent(), projectRoot);
+    }
+
+    // Current unused and untested, for menu dropdown
+    public static List<String> findAllParentTsconfigs(String testFile, Project project) {
+        List<String> startList = new ArrayList<>();
+        return Util.findAllParentTsconfigsRec(Paths.get(testFile).getParent(), Paths.get(project.getBasePath()), startList);
+    }
+
+    @Nullable
+    private static List<String> findAllParentTsconfigsRec(Path currentDir, Path projectRoot, List<String> acc) {
+        Path target = Paths.get(currentDir.toString(), "tsconfig.json");
+        if (Files.exists(target)) {
+            acc.add(target.toString());
+        }
+        if (currentDir.equals(projectRoot)) {
+            return acc;
+        }
+        return findAllParentTsconfigsRec(currentDir.getParent(), projectRoot, acc);
     }
 }

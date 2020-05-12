@@ -4,7 +4,10 @@ import com.intellij.execution.BeforeRunTaskProvider;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.application.NonBlockingReadAction;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.util.Key;
+import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,50 +46,54 @@ public class CustomBeforeRunTaskProvider extends BeforeRunTaskProvider<CustomBef
     }
 
     @Nullable
-    public CustomBeforeRunTask createTask(@NotNull RunConfiguration runConfiguration, Selected dt) {
-        return new CustomBeforeRunTask(this.getId(), dt);
+    public CustomBeforeRunTask createTask(@NotNull RunConfiguration runConfiguration, Selected dt, FileWatcher fw) {
+        return new CustomBeforeRunTask(this.getId(), dt, fw);
     }
 
     @Override
     public boolean executeTask(@NotNull DataContext dataContext, @NotNull RunConfiguration runConfiguration, @NotNull ExecutionEnvironment executionEnvironment, @NotNull CustomBeforeRunTask beforeRunTask) {
         Selected dt = beforeRunTask.getData();
-        if (dt != null) {
-            this.doInjection(dt);
+        FileWatcher fw = beforeRunTask.getWatcher();
+        if (dt != null && fw != null) {
+            boolean injectSucceeded = this.doInjection(dt);
+            if (injectSucceeded) { // Only start the listener if we're going to proceed
+                NonBlockingReadAction<Void> res = ReadAction.nonBlocking(fw);
+                res.submit(NonUrgentExecutor.getInstance());
+                return true;
+            }
         }
-        return true;
+        return false;
     }
 
-    public void doInjection(Selected dt) {
+    public boolean doInjection(Selected dt) {
         int line = dt.getLine();
         String selected = dt.getSelected();
         String filePathTs = dt.getTsFilePath();
-        String fileStart = Util.pathToFileContent(Paths.get(filePathTs));
-        String toInject = Util.createString(this.createInjectionStringList(selected));
-        String newFile = Util.spliceInto(fileStart, toInject, line);
 
         try {
+            String fileStart = Util.pathToFileContent(Paths.get(filePathTs));
+            String toInject = Util.createString(this.createInjectionStringList(selected));
+            String newFile = Util.spliceInto(fileStart, toInject, line);
             FileWriter fw = new FileWriter(filePathTs);
             fw.write(newFile);
             fw.close();
-        } catch (IOException err) {
+            return true;
+        } catch (IOException | PluginException err) {
             System.out.println(err.getMessage());
+            return false;
         }
     }
 
-    private List<String> createInjectionStringList(String varName)
+    private List<String> createInjectionStringList(String varName) throws IOException
     {
-        try {
-            InputStream is = TestAction.class.getClassLoader().getResourceAsStream("ts-injection.ts");
-            String recordingFunction = IOUtils.toString(is, Charset.defaultCharset());
-            String save = "const longVarNameToNotClash: any = elemUnderTestGenerator(" + varName + ");";
-            String log = "require(\"fs\").writeFileSync(__dirname + \"/\" + \"" + CustomBeforeRunTaskProvider.logFile + "\", JSON.stringify(longVarNameToNotClash));";
-            List<String> res = new ArrayList<>();
-            res.add(recordingFunction);
-            res.add(save);
-            res.add(log);
-            return res;
-        } catch (Exception err) {
-            return new ArrayList<>();
-        }
+        InputStream is = TestAction.class.getClassLoader().getResourceAsStream("ts-injection.ts");
+        String recordingFunction = IOUtils.toString(is, Charset.defaultCharset());
+        String save = "const longVarNameToNotClash: any = elemUnderTestGenerator(" + varName + ");";
+        String log = "require(\"fs\").writeFileSync(__dirname + \"/\" + \"" + CustomBeforeRunTaskProvider.logFile + "\", JSON.stringify(longVarNameToNotClash));";
+        List<String> res = new ArrayList<>();
+        res.add(recordingFunction);
+        res.add(save);
+        res.add(log);
+        return res;
     }
 }
