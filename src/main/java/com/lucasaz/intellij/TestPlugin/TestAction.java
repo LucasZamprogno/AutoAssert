@@ -6,6 +6,7 @@ import com.intellij.execution.actions.ConfigurationFromContext;
 import com.intellij.execution.actions.RunConfigurationProducer;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.ExecutionUtil;
+import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -26,15 +27,14 @@ public class TestAction extends AnAction
     private AnActionEvent e;
     private Selected selected;
     private FileWatcher fw;
-    /**
-     * Convert selected text to a URL friendly string.
-     * @param e
-     */
+    private PropertiesComponent settings;
+
     @Override
     public void actionPerformed(AnActionEvent e)
     {
         this.e = e;
         this.project = e.getData(LangDataKeys.PROJECT);
+        this.settings = PropertiesComponent.getInstance(project);
 
         try {
             this.selected = this.makeSelectedInformation();
@@ -91,7 +91,9 @@ public class TestAction extends AnAction
 
         List<BeforeRunTask<?>> tasks = new ArrayList<>();
         tasks.add(this.createInjectionBeforeRun(racs));
-        tasks.add(this.createCompileBefore(racs));
+        if (this.settings.getBoolean(TestSettingsConfigurable.BUILD_ALL_KEY)) {
+            tasks.add(this.createCompileBefore(racs));
+        }
         racs.getConfiguration().setBeforeRunTasks(tasks);
 
         return racs;
@@ -100,9 +102,14 @@ public class TestAction extends AnAction
     private BeforeRunTask<?> createCompileBefore(RunnerAndConfigurationSettings racs) throws PluginException {
         BeforeRunTaskProvider<?> mbrtp = BeforeRunTaskProvider.EXTENSION_POINT_NAME.getExtensionList(this.project).get(10);
         BeforeRunTask<?> mbrt = mbrtp.createTask(racs.getConfiguration());
-        String tsconfigPath = Util.findNearestTsconfig(this.selected.tsFilePath, this.project);
+        String tsconfigPath;
+        if (this.settings.getBoolean(TestSettingsConfigurable.AUTO_CONFIG_KEY)) {
+            tsconfigPath = Util.findNearestTsconfig(this.selected.tsFilePath, this.project);
+        } else {
+            tsconfigPath = this.settings.getValue(TestSettingsConfigurable.PATH_KEY);
+        }
         if (tsconfigPath == null) {
-            throw new PluginException("Failed to find tsconfig file between test file and project root");
+            throw new PluginException("Failed to find tsconfig file");
         }
         try {
             Method setConfigPath = mbrt.getClass().getDeclaredMethod("setConfigPath", String.class);

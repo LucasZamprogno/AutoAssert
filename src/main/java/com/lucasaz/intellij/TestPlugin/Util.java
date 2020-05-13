@@ -74,21 +74,22 @@ public class Util {
         return findNearestTsconfigRec(currentDir.getParent(), projectRoot);
     }
 
-    // Current unused and untested, for menu dropdown
-    public static List<String> findAllParentTsconfigs(String testFile, Project project) {
-        List<String> startList = new ArrayList<>();
-        return Util.findAllParentTsconfigsRec(Paths.get(testFile).getParent(), Paths.get(project.getBasePath()), startList);
-    }
-
-    @Nullable
-    private static List<String> findAllParentTsconfigsRec(Path currentDir, Path projectRoot, List<String> acc) {
-        Path target = Paths.get(currentDir.toString(), "tsconfig.json");
-        if (Files.exists(target)) {
-            acc.add(target.toString());
+    public static List<String> findAllTsconfigInProject(Project project) {
+        // https://stackoverflow.com/questions/40540915/how-to-find-a-file-recursively-in-java/40541501
+        try {
+            List<String> list = new ArrayList<>();
+            Files.walk(Paths.get(project.getBasePath()))
+                .filter(Files::isRegularFile)
+                .forEach((f) -> {
+                    String file = f.toString();
+                    if (file.endsWith("tsconfig.json") && !file.contains("node_modules")) {
+                        // TODO better way to check for node_modules
+                        list.add(file);
+                    }
+                });
+            return list;
+        } catch (IOException err) {
+            return new ArrayList<>();
         }
-        if (currentDir.equals(projectRoot)) {
-            return acc;
-        }
-        return findAllParentTsconfigsRec(currentDir.getParent(), projectRoot, acc);
     }
 }

@@ -1,18 +1,21 @@
 package com.lucasaz.intellij.TestPlugin;
 
 import com.intellij.ide.util.PropertiesComponent;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.project.ProjectUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.util.List;
 
 public class TestSettingsConfigurable implements SearchableConfigurable {
+    public static final String BUILD_ALL_KEY = "TestPluginBuildAllKey";
+    public static final String AUTO_CONFIG_KEY = "TestPluginAutoConfigKey";
     public static final String PATH_KEY = "TestPluginTsconfigPathKey";
-    public static final String BUILD_KEY = "TestPluginShouldBuildKey";
     private TestSettingsForm mySettingsPane;
     private PropertiesComponent settings;
 
@@ -37,26 +40,30 @@ public class TestSettingsConfigurable implements SearchableConfigurable {
     public JComponent createComponent() {
         if (mySettingsPane == null) {
             mySettingsPane = new TestSettingsForm();
-            String saved = this.settings.getValue(PATH_KEY);
-            if (saved == null) {
-                this.settings.setValue(PATH_KEY, "");
-                this.mySettingsPane.setPath("");
-            } else {
-                mySettingsPane.setPath(saved);
-            }
+            String selected = this.settings.getValue(PATH_KEY, "");
+            boolean build = this.settings.getBoolean(BUILD_ALL_KEY);
+            boolean auto = this.settings.getBoolean(AUTO_CONFIG_KEY);
+            final Project project = ProjectUtil.guessCurrentProject(mySettingsPane.getPanel()); // Spooky
+            List<String> tsconfigPaths = Util.findAllTsconfigInProject(project);
+            mySettingsPane.setAll(tsconfigPaths, selected, build, auto);
+            mySettingsPane.setListeners();
         }
-        reset();
+        reset(); // I don't know what this does
         return mySettingsPane.getPanel();
     }
 
     @Override
     public boolean isModified() {
-        return !this.mySettingsPane.getPath().equals(this.settings.getValue(PATH_KEY));
+        boolean buildChanged = !(this.mySettingsPane.getBuild() == this.settings.getBoolean(BUILD_ALL_KEY));
+        boolean autoChanged = !(this.mySettingsPane.getAuto() == this.settings.getBoolean(AUTO_CONFIG_KEY));
+        boolean pathChanged = !this.mySettingsPane.getPath().equals(this.settings.getValue(PATH_KEY));
+        return buildChanged || autoChanged || pathChanged;
     }
 
     @Override
-    public void apply() throws ConfigurationException {
+    public void apply() {
+        this.settings.setValue(BUILD_ALL_KEY, mySettingsPane.getBuild());
+        this.settings.setValue(AUTO_CONFIG_KEY, mySettingsPane.getAuto());
         this.settings.setValue(PATH_KEY, mySettingsPane.getPath());
-        // this.path = mySettingsPane.getPath();
     }
 }
