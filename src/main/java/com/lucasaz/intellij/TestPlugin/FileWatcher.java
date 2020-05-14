@@ -120,23 +120,31 @@ public class FileWatcher extends Thread implements Runnable {
         switch (type) {
             case "boolean":
             case "number":
-            case "string":
-                val = (String) observed.get("value");
+                val = observed.get("value").toString();
                 toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
                 toReturn.append(ws).append("expect(typeof varName).to.equal(resType);").append(lsp);
                 toReturn.append(ws).append("expect(varName).to.equal(").append(val).append(");").append(lsp);
                 break;
-            case "symbol":
-                val = (String) observed.get("value"); // ???
+            case "string": // Only diff is the quotes in the deep equal
+                val = (String) observed.get("value");
                 toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
                 toReturn.append(ws).append("expect(typeof varName).to.equal(resType);").append(lsp);
-                toReturn.append(ws).append("expect(varName.toString()).to.equal(").append(val).append(");").append(lsp);
+                toReturn.append(ws).append("expect(varName).to.equal(\"").append(val).append("\");").append(lsp);
+                break;
+            case "symbol":
+                val = (String) observed.get("value");
+                toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
+                toReturn.append(ws).append("expect(typeof varName).to.equal(resType);").append(lsp);
+                toReturn.append(ws).append("expect(varName.toString()).to.equal(\"").append(val).append("\");").append(lsp);
                 break;
             case "function":
                 toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
                 toReturn.append(ws).append("expect(typeof varName).to.equal(resType);").append(lsp);
                 break;
             case "null":
+                toReturn.append(ws).append("expect(varName).to.not.exist;").append(lsp);
+                toReturn.append(ws).append("expect(varName).to.equal(null);").append(lsp);
+                break;
             case "undefined":
                 toReturn.append(ws).append("expect(varName).to.not.exist;").append(lsp);
                 toReturn.append(ws).append("expect(typeof varName).to.equal(resType);").append(lsp);
@@ -153,13 +161,14 @@ public class FileWatcher extends Thread implements Runnable {
                 val = setArr.toString();
                 toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
                 toReturn.append(ws).append("expect(varName instanceof Set).to.be.true;").append(lsp);
-                toReturn.append(ws).append("expect(Array.from(varName)).to.deep.equal(").append(val).append(");").append(lsp); // No idea if this works
+                toReturn.append(ws).append("expect(Array.from(varName)).to.deep.equal(\"").append(val).append("\");").append(lsp); // No idea if this works
                 break;
             case "object":
-                JSONObject subObj = new JSONObject(observed.get("value"));
+                JSONObject subObj = (JSONObject) observed.get("value");
+                val = subObj.toString();
                 toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
                 toReturn.append(ws).append("expect(typeof varName).to.equal(resType);").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.deep.equal(").append(subObj.toString()).append(");").append(lsp);
+                toReturn.append(ws).append("expect(varName).to.deep.equal(\"").append(val).append("\");").append(lsp);
                 break;
             default:
                 // Should never happen
@@ -167,7 +176,7 @@ public class FileWatcher extends Thread implements Runnable {
         }
         String out = toReturn.toString();
         out = out.replaceAll("varName", name);
-        return out.replaceAll("resType", type);
+        return out.replaceAll("resType", "\"" + type + "\"");
     }
 }
 
