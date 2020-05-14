@@ -1,11 +1,10 @@
-package com.lucasaz.intellij.TestPlugin;
+package com.lucasaz.intellij.AssertionGeneration;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
-public class TestSettingsForm {
+public class AssertionGenerationSettingsForm {
     private JPanel jPanel;
     private JCheckBox buildAll;
     private JCheckBox autoSelect;
@@ -46,7 +45,7 @@ public class TestSettingsForm {
     }
 
     public void setListeners() {
-        TestSettingsForm form = this;
+        AssertionGenerationSettingsForm form = this;
         ActionListener al = e -> form.setEnabledStates();
         this.buildAll.addActionListener(al);
         this.autoSelect.addActionListener(al);

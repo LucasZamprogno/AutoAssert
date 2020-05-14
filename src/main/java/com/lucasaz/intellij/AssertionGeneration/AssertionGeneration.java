@@ -1,4 +1,4 @@
-package com.lucasaz.intellij.TestPlugin;
+package com.lucasaz.intellij.AssertionGeneration;
 
 import com.intellij.execution.*;
 import com.intellij.execution.actions.ConfigurationContext;
@@ -21,7 +21,7 @@ import java.nio.file.*;
 import java.util.*;
 
 
-public class TestAction extends AnAction
+public class AssertionGeneration extends AnAction
 {
     private Project project;
     private AnActionEvent e;
@@ -91,7 +91,7 @@ public class TestAction extends AnAction
 
         List<BeforeRunTask<?>> tasks = new ArrayList<>();
         tasks.add(this.createInjectionBeforeRun(racs));
-        if (this.settings.getBoolean(TestSettingsConfigurable.BUILD_ALL_KEY)) {
+        if (this.settings.getBoolean(AssertionGenerationSettingsConfigurable.BUILD_ALL_KEY)) {
             tasks.add(this.createCompileBefore(racs));
         }
         racs.getConfiguration().setBeforeRunTasks(tasks);
@@ -103,10 +103,10 @@ public class TestAction extends AnAction
         BeforeRunTaskProvider<?> mbrtp = BeforeRunTaskProvider.EXTENSION_POINT_NAME.getExtensionList(this.project).get(10);
         BeforeRunTask<?> mbrt = mbrtp.createTask(racs.getConfiguration());
         String tsconfigPath;
-        if (this.settings.getBoolean(TestSettingsConfigurable.AUTO_CONFIG_KEY)) {
+        if (this.settings.getBoolean(AssertionGenerationSettingsConfigurable.AUTO_CONFIG_KEY)) {
             tsconfigPath = Util.findNearestTsconfig(this.selected.tsFilePath, this.project);
         } else {
-            tsconfigPath = this.settings.getValue(TestSettingsConfigurable.PATH_KEY);
+            tsconfigPath = this.settings.getValue(AssertionGenerationSettingsConfigurable.PATH_KEY);
         }
         if (tsconfigPath == null) {
             throw new PluginException("Failed to find tsconfig file");
@@ -121,7 +121,7 @@ public class TestAction extends AnAction
     }
 
     private BeforeRunTask<?> createInjectionBeforeRun(RunnerAndConfigurationSettings racs) {
-        CustomBeforeRunTaskProvider cbrtp = new CustomBeforeRunTaskProvider();
+        AssertionGenerationBeforeRunTaskProvider cbrtp = new AssertionGenerationBeforeRunTaskProvider();
         return cbrtp.createTask(racs.getConfiguration(), this.selected, this.fw);
     }
 

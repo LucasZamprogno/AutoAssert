@@ -1,9 +1,8 @@
-package com.lucasaz.intellij.TestPlugin;
+package com.lucasaz.intellij.AssertionGeneration;
 
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.project.ProjectUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -12,34 +11,34 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.util.List;
 
-public class TestSettingsConfigurable implements SearchableConfigurable {
-    public static final String BUILD_ALL_KEY = "TestPluginBuildAllKey";
-    public static final String AUTO_CONFIG_KEY = "TestPluginAutoConfigKey";
-    public static final String PATH_KEY = "TestPluginTsconfigPathKey";
-    private TestSettingsForm mySettingsPane;
+public class AssertionGenerationSettingsConfigurable implements SearchableConfigurable {
+    public static final String BUILD_ALL_KEY = "AssertionGenerationBuildAllKey";
+    public static final String AUTO_CONFIG_KEY = "AssertionGenerationAutoConfigKey";
+    public static final String PATH_KEY = "AssertionGenerationTsconfigPathKey";
+    private AssertionGenerationSettingsForm mySettingsPane;
     private PropertiesComponent settings;
 
-    public TestSettingsConfigurable(Project project) {
+    public AssertionGenerationSettingsConfigurable(Project project) {
         settings = PropertiesComponent.getInstance(project);
     }
 
     @NotNull
     @Override
     public String getId() {
-        return "test.settings";
+        return "assertion.generation.settings";
     }
 
     @Nls(capitalization = Nls.Capitalization.Title)
     @Override
     public String getDisplayName() {
-        return "Test Settings";
+        return "Assertion Generation";
     }
 
     @Nullable
     @Override
     public JComponent createComponent() {
         if (mySettingsPane == null) {
-            mySettingsPane = new TestSettingsForm();
+            mySettingsPane = new AssertionGenerationSettingsForm();
             String selected = this.settings.getValue(PATH_KEY, "");
             boolean build = this.settings.getBoolean(BUILD_ALL_KEY);
             boolean auto = this.settings.getBoolean(AUTO_CONFIG_KEY);

@@ -1,4 +1,4 @@
-package com.lucasaz.intellij.TestPlugin;
+package com.lucasaz.intellij.AssertionGeneration;
 
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.Nullable;
@@ -88,7 +88,7 @@ public class Util {
                     }
                 });
             return list;
-        } catch (IOException err) {
+        } catch (IOException | NullPointerException err) {
             return new ArrayList<>();
         }
     }

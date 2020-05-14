@@ -1,4 +1,4 @@
-package com.lucasaz.intellij.TestPlugin;
+package com.lucasaz.intellij.AssertionGeneration;
 
 import com.intellij.openapi.application.NonBlockingReadAction;
 import com.intellij.openapi.application.ReadAction;

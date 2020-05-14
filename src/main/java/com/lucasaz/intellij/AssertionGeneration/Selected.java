@@ -1,4 +1,4 @@
-package com.lucasaz.intellij.TestPlugin;
+package com.lucasaz.intellij.AssertionGeneration;
 
 public class Selected {
     int line;

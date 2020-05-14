@@ -1,4 +1,4 @@
-package com.lucasaz.intellij.TestPlugin;
+package com.lucasaz.intellij.AssertionGeneration;
 
 import com.intellij.execution.BeforeRunTaskProvider;
 import com.intellij.execution.configurations.RunConfiguration;
@@ -20,13 +20,13 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CustomBeforeRunTaskProvider extends BeforeRunTaskProvider<CustomBeforeRunTask> {
+public class AssertionGenerationBeforeRunTaskProvider extends BeforeRunTaskProvider<AssertionGenerationBeforeRunTask> {
     private static String logFile = ".testOutput";
-    public static final Key<CustomBeforeRunTask> ID = Key.create("Custom.BeforeRunTask");
+    public static final Key<AssertionGenerationBeforeRunTask> ID = Key.create("Custom.BeforeRunTask");
 
     @Override
-    public Key<CustomBeforeRunTask> getId() {
-        return CustomBeforeRunTaskProvider.ID;
+    public Key<AssertionGenerationBeforeRunTask> getId() {
+        return AssertionGenerationBeforeRunTaskProvider.ID;
     }
 
     @Override
@@ -35,23 +35,23 @@ public class CustomBeforeRunTaskProvider extends BeforeRunTaskProvider<CustomBef
     }
 
     @Override
-    public String getDescription(CustomBeforeRunTask task) {
+    public String getDescription(AssertionGenerationBeforeRunTask task) {
         return "Description";
     }
 
     @Nullable
     @Override
-    public CustomBeforeRunTask createTask(@NotNull RunConfiguration runConfiguration) {
-        return new CustomBeforeRunTask(this.getId());
+    public AssertionGenerationBeforeRunTask createTask(@NotNull RunConfiguration runConfiguration) {
+        return new AssertionGenerationBeforeRunTask(this.getId());
     }
 
     @Nullable
-    public CustomBeforeRunTask createTask(@NotNull RunConfiguration runConfiguration, Selected dt, FileWatcher fw) {
-        return new CustomBeforeRunTask(this.getId(), dt, fw);
+    public AssertionGenerationBeforeRunTask createTask(@NotNull RunConfiguration runConfiguration, Selected dt, FileWatcher fw) {
+        return new AssertionGenerationBeforeRunTask(this.getId(), dt, fw);
     }
 
     @Override
-    public boolean executeTask(@NotNull DataContext dataContext, @NotNull RunConfiguration runConfiguration, @NotNull ExecutionEnvironment executionEnvironment, @NotNull CustomBeforeRunTask beforeRunTask) {
+    public boolean executeTask(@NotNull DataContext dataContext, @NotNull RunConfiguration runConfiguration, @NotNull ExecutionEnvironment executionEnvironment, @NotNull AssertionGenerationBeforeRunTask beforeRunTask) {
         Selected dt = beforeRunTask.getData();
         FileWatcher fw = beforeRunTask.getWatcher();
         if (dt != null && fw != null) {
@@ -86,10 +86,10 @@ public class CustomBeforeRunTaskProvider extends BeforeRunTaskProvider<CustomBef
 
     private List<String> createInjectionStringList(String varName) throws IOException
     {
-        InputStream is = TestAction.class.getClassLoader().getResourceAsStream("ts-injection.ts");
+        InputStream is = AssertionGeneration.class.getClassLoader().getResourceAsStream("ts-injection.ts");
         String recordingFunction = IOUtils.toString(is, Charset.defaultCharset());
         String save = "const longVarNameToNotClash: any = elemUnderTestGenerator(" + varName + ");";
-        String log = "require(\"fs\").writeFileSync(__dirname + \"/\" + \"" + CustomBeforeRunTaskProvider.logFile + "\", JSON.stringify(longVarNameToNotClash));";
+        String log = "require(\"fs\").writeFileSync(__dirname + \"/\" + \"" + AssertionGenerationBeforeRunTaskProvider.logFile + "\", JSON.stringify(longVarNameToNotClash));";
         List<String> res = new ArrayList<>();
         res.add(recordingFunction);
         res.add(save);
