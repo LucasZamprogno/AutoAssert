@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-
 public class FileWatcher extends Thread implements Runnable {
     private Selected selected;
     private Path path;
@@ -25,7 +24,6 @@ public class FileWatcher extends Thread implements Runnable {
         }
         FileWatcher.instance = new FileWatcher(selected, watcher);
         return FileWatcher.instance;
-
     }
 
     private FileWatcher(Selected selected, WatchService watcher) {
@@ -108,7 +106,6 @@ public class FileWatcher extends Thread implements Runnable {
         return Util.spliceInto(this.selected.originalFile, assertions, this.selected.line);
     }
 
-    // This needs lots of testing!
     private String scuffedGenAssertions(JSONObject observed) {
         String name = this.selected.selected;
         String ws = this.selected.whitespace;
