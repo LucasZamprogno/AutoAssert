@@ -5,7 +5,6 @@ import com.intellij.execution.actions.ConfigurationContext;
 import com.intellij.execution.actions.ConfigurationFromContext;
 import com.intellij.execution.actions.RunConfigurationProducer;
 import com.intellij.execution.configurations.RunConfiguration;
-import com.intellij.execution.configurations.RunnerSettings;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.ExecutionUtil;
 import com.intellij.ide.util.PropertiesComponent;
@@ -15,10 +14,6 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.search.FilenameIndex;
-import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.testFramework.MapDataContext;
 
 import java.io.FileWriter;
@@ -51,6 +46,10 @@ public class AssertionGeneration extends AnAction
             return;
         }
 
+        // OUTFILE should be gone but attempt to delete just in case, don't want FileWatcher to miss it
+        String[] toEnsureDeleted = {Util.OUTFILE};
+        Util.cleanup(toEnsureDeleted);
+
         try {
             String newPath = Util.makeBackgroundFilename(this.selected.tsFilePath);
             FileWriter fw = new FileWriter(newPath);
@@ -65,7 +64,7 @@ public class AssertionGeneration extends AnAction
         try {
             WatchService watcher = FileSystems.getDefault().newWatchService();
             Paths.get(this.selected.tsFilePath).getParent().register(watcher, StandardWatchEventKinds.ENTRY_CREATE);
-            this.fw = FileWatcher.getInstance(this.selected, ".testOutput", watcher);
+            this.fw = FileWatcher.getInstance(this.selected, watcher);
         } catch (IOException err) {
             System.err.println("Failed to setup file watcher");
             System.err.println(err.getMessage());
@@ -115,7 +114,6 @@ public class AssertionGeneration extends AnAction
             filePathField.setAccessible(true);
             String backgroundFilePath = Util.makeBackgroundFilename(this.selected.tsFilePath);
             filePathField.set(rs, backgroundFilePath);
-            int breakpoint = 1;
         } catch (Throwable aaa) {
             System.err.println(aaa.getMessage());
         }

@@ -3,6 +3,7 @@ package com.lucasaz.intellij.AssertionGeneration;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -13,7 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Util {
-    private static String PREFIX = "zzz-";
+    public static String PREFIX = "zzz-";
+    public static String OUTFILE = ".testOutput";
 
     public static String spliceInto(String base, String toInsert, int index) throws PluginException {
         List<String> lines = Util.toLines(base);
@@ -99,5 +101,16 @@ public class Util {
         Path originalAsPath = Paths.get(original);
         String newFilename = Util.PREFIX + originalAsPath.getFileName();
         return Paths.get(originalAsPath.getParent().toString(), newFilename).toString();
+    }
+
+    public static void cleanup(String[] filepaths) {
+        for (String path : filepaths) {
+            new File(path).delete();
+            if (path.endsWith(".ts")) {
+                String noExtension = path.substring(0, path.length() - 3);
+                new File(noExtension + ".js").delete();
+                new File(noExtension + ".js.map").delete();
+            }
+        }
     }
 }

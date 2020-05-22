@@ -6,7 +6,6 @@ import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.*;
@@ -16,24 +15,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class FileWatcher extends Thread implements Runnable {
     private Selected selected;
     private Path path;
-    private String target;
     private AtomicBoolean stop;
     private WatchService watcher;
     private static FileWatcher instance = null;
 
-    public static FileWatcher getInstance(Selected selected, String target, WatchService watcher) {
+    public static FileWatcher getInstance(Selected selected, WatchService watcher) {
         if (FileWatcher.instance != null) {
             instance.stopRequeue();
         }
-        FileWatcher.instance = new FileWatcher(selected, target, watcher);
+        FileWatcher.instance = new FileWatcher(selected, watcher);
         return FileWatcher.instance;
 
     }
 
-    private FileWatcher(Selected selected, String target, WatchService watcher) {
+    private FileWatcher(Selected selected, WatchService watcher) {
             this.selected = selected;
             this.path = Paths.get(selected.tsFilePath);
-            this.target = target;
             this.stop = new AtomicBoolean(false);
             this.watcher = watcher;
     }
@@ -58,7 +55,7 @@ public class FileWatcher extends Thread implements Runnable {
                 Path filename = ev.context();
 
                 if (kind == java.nio.file.StandardWatchEventKinds.ENTRY_CREATE
-                        && filename.toString().equals(this.target)) {
+                        && filename.toString().equals(Util.OUTFILE)) {
                     Thread.sleep(20); // Make sure write is finished
                     this.onFileCreate();
                     return;
@@ -80,10 +77,11 @@ public class FileWatcher extends Thread implements Runnable {
     }
 
     private void onFileCreate() {
-        Path filepath = Paths.get(this.path.getParent().toString(), this.target);
+        Path testOutputPath = Paths.get(this.path.getParent().toString(), Util.OUTFILE);
+        String runFile = Util.makeBackgroundFilename(this.selected.tsFilePath);
         String runResult;
         try {
-            runResult = Util.pathToFileContent(filepath);
+            runResult = Util.pathToFileContent(testOutputPath);
         } catch (IOException err) {
             System.err.println("Failed to read run output");
             System.err.println(err.getMessage());
@@ -93,7 +91,8 @@ public class FileWatcher extends Thread implements Runnable {
         JSONObject res = new JSONObject(runResult);
 
         try {
-            new File(filepath.toString()).delete(); // Delete .testOutput
+            String[] oldFiles = {runFile, testOutputPath.toString()};
+            Util.cleanup(oldFiles);
             String wouldBeAssertedFile = this.makeFinalFile(res);
             FileWriter fw = new FileWriter(this.path.toString());
             fw.write(wouldBeAssertedFile);
@@ -179,73 +178,3 @@ public class FileWatcher extends Thread implements Runnable {
         return out.replaceAll("resType", "\"" + type + "\"");
     }
 }
-
-
-/*
-package com.lucasaz.intellij.TestPlugin;
-
-import java.nio.file.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-
-public class FileWatcher extends Thread {
-    private Path path;
-    private String target;
-    private TestAction hostAction;
-    private AtomicBoolean stop;
-
-    public FileWatcher(Path path, String target, TestAction hostAction) {
-            this.path = path;
-            this.target = target;
-            this.hostAction = hostAction;
-            this.stop = new AtomicBoolean(false);
-    }
-
-    public boolean isStopped() { return stop.get(); }
-    public void stopThread() { stop.set(true); }
-
-    @Override
-    public void run() {
-        try {
-            WatchService watcher = FileSystems.getDefault().newWatchService();
-            this.path.register(watcher, StandardWatchEventKinds.ENTRY_CREATE);
-            while (!isStopped()) {
-                WatchKey key;
-                key = watcher.poll();
-                System.out.println("Running");
-                if (key == null) {
-                    Thread.sleep(50);
-                    continue;
-                }
-
-                for (WatchEvent<?> event : key.pollEvents()) {
-                    WatchEvent.Kind<?> kind = event.kind();
-
-                    @SuppressWarnings("unchecked")
-                    WatchEvent<Path> ev = (WatchEvent<Path>) event;
-                    Path filename = ev.context();
-
-                    if (kind == StandardWatchEventKinds.OVERFLOW) {
-                        Thread.sleep(50);
-                    } else if (kind == java.nio.file.StandardWatchEventKinds.ENTRY_CREATE
-                            && filename.toString().equals(this.target)) {
-                        System.out.println("~~~~~~~ HIT ~~~~~~~");
-                        this.hostAction.onFileCreate();
-                    }
-                }
-                boolean valid = key.reset();
-                if (!valid)
-                {
-                    break;
-                }
-                Thread.sleep(50);
-            }
-        } catch (Throwable e) {
-            System.out.println("aaaaaa");
-            System.out.println(e.getMessage());
-        }
-    }
-}
-
-
- */

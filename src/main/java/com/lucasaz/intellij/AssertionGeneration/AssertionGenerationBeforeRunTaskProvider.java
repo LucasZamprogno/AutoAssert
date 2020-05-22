@@ -68,7 +68,7 @@ public class AssertionGenerationBeforeRunTaskProvider extends BeforeRunTaskProvi
     public boolean doInjection(Selected dt) {
         int line = dt.getLine();
         String selected = dt.getSelected();
-        String filePathTs = dt.getTsFilePath();
+        String filePathTs = Util.makeBackgroundFilename(dt.getTsFilePath());
 
         try {
             String fileStart = Util.pathToFileContent(Paths.get(filePathTs));
