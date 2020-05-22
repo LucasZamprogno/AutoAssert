@@ -21,6 +21,7 @@ dependencies {
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
+    updateSinceUntilBuild = false
     version '2019.3.4'
     type 'IU'
 }
