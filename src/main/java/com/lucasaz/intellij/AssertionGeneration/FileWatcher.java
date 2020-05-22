@@ -161,14 +161,14 @@ public class FileWatcher extends Thread implements Runnable {
                 val = setArr.toString();
                 toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
                 toReturn.append(ws).append("expect(varName instanceof Set).to.be.true;").append(lsp);
-                toReturn.append(ws).append("expect(Array.from(varName)).to.deep.equal(\"").append(val).append("\");").append(lsp); // No idea if this works
+                toReturn.append(ws).append("expect(Array.from(varName)).to.deep.equal(").append(val).append(");").append(lsp); // No idea if this works
                 break;
             case "object":
                 JSONObject subObj = (JSONObject) observed.get("value");
                 val = subObj.toString();
                 toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
                 toReturn.append(ws).append("expect(typeof varName).to.equal(resType);").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.deep.equal(\"").append(val).append("\");").append(lsp);
+                toReturn.append(ws).append("expect(varName).to.deep.equal(").append(val).append(");").append(lsp);
                 break;
             default:
                 // Should never happen
