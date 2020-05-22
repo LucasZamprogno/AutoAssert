@@ -13,6 +13,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Util {
+    private static String PREFIX = "zzz-";
+
     public static String spliceInto(String base, String toInsert, int index) throws PluginException {
         List<String> lines = Util.toLines(base);
         if (lines.size() < index + 1) {
@@ -91,5 +93,11 @@ public class Util {
         } catch (IOException | NullPointerException err) {
             return new ArrayList<>();
         }
+    }
+
+    public static String makeBackgroundFilename(String original) {
+        Path originalAsPath = Paths.get(original);
+        String newFilename = Util.PREFIX + originalAsPath.getFileName();
+        return Paths.get(originalAsPath.getParent().toString(), newFilename).toString();
     }
 }
