@@ -1,4 +1,4 @@
-package com.lucasaz.intellij.AssertionGeneration;
+package com.lucasaz.intellij.AssertionGeneration.exceptions;
 
 public class PluginException extends Exception {
     public PluginException(String str) {

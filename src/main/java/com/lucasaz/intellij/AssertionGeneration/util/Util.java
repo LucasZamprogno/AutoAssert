@@ -1,6 +1,7 @@
-package com.lucasaz.intellij.AssertionGeneration;
+package com.lucasaz.intellij.AssertionGeneration.util;
 
 import com.intellij.openapi.project.Project;
+import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;

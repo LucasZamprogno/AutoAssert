@@ -1,7 +1,9 @@
-package com.lucasaz.intellij.AssertionGeneration;
+package com.lucasaz.intellij.AssertionGeneration.execution;
 
 import com.intellij.execution.BeforeRunTask;
 import com.intellij.openapi.util.Key;
+import com.lucasaz.intellij.AssertionGeneration.services.FileWatcher;
+import com.lucasaz.intellij.AssertionGeneration.dto.Selected;
 import org.jetbrains.annotations.NotNull;
 
 public class AssertionGenerationBeforeRunTask extends BeforeRunTask<AssertionGenerationBeforeRunTask> {
