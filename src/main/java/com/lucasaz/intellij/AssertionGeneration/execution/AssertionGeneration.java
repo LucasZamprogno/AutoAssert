@@ -1,4 +1,4 @@
-package com.lucasaz.intellij.AssertionGeneration;
+package com.lucasaz.intellij.AssertionGeneration.execution;
 
 import com.intellij.execution.*;
 import com.intellij.execution.actions.ConfigurationContext;
@@ -15,6 +15,12 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.MapDataContext;
+import com.lucasaz.intellij.AssertionGeneration.dto.Selected;
+import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
+import com.lucasaz.intellij.AssertionGeneration.execution.AssertionGenerationBeforeRunTaskProvider;
+import com.lucasaz.intellij.AssertionGeneration.indices.AssertionGenerationSettingsConfigurable;
+import com.lucasaz.intellij.AssertionGeneration.services.FileWatcher;
+import com.lucasaz.intellij.AssertionGeneration.util.Util;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -51,9 +57,9 @@ public class AssertionGeneration extends AnAction
         Util.cleanup(toEnsureDeleted);
 
         try {
-            String newPath = Util.makeBackgroundFilename(this.selected.tsFilePath);
+            String newPath = Util.makeBackgroundFilename(this.selected.getTsFilePath());
             FileWriter fw = new FileWriter(newPath);
-            fw.write(this.selected.originalFile);
+            fw.write(this.selected.getOriginalFile());
             fw.close();
         } catch (IOException err) {
             System.err.println("Error making background copy of test file");
@@ -63,7 +69,7 @@ public class AssertionGeneration extends AnAction
 
         try {
             WatchService watcher = FileSystems.getDefault().newWatchService();
-            Paths.get(this.selected.tsFilePath).getParent().register(watcher, StandardWatchEventKinds.ENTRY_CREATE);
+            Paths.get(this.selected.getTsFilePath()).getParent().register(watcher, StandardWatchEventKinds.ENTRY_CREATE);
             this.fw = FileWatcher.getInstance(this.selected, watcher);
         } catch (IOException err) {
             System.err.println("Failed to setup file watcher");
@@ -112,7 +118,7 @@ public class AssertionGeneration extends AnAction
             Object rs = getRunSettings.invoke(rc);
             Field filePathField = rs.getClass().getDeclaredField("myTestFilePath");
             filePathField.setAccessible(true);
-            String backgroundFilePath = Util.makeBackgroundFilename(this.selected.tsFilePath);
+            String backgroundFilePath = Util.makeBackgroundFilename(this.selected.getTsFilePath());
             filePathField.set(rs, backgroundFilePath);
         } catch (Throwable aaa) {
             System.err.println(aaa.getMessage());
@@ -133,7 +139,7 @@ public class AssertionGeneration extends AnAction
         BeforeRunTask<?> mbrt = mbrtp.createTask(racs.getConfiguration());
         String tsconfigPath;
         if (this.settings.getBoolean(AssertionGenerationSettingsConfigurable.AUTO_CONFIG_KEY)) {
-            tsconfigPath = Util.findNearestTsconfig(this.selected.tsFilePath, this.project);
+            tsconfigPath = Util.findNearestTsconfig(this.selected.getTsFilePath(), this.project);
         } else {
             tsconfigPath = this.settings.getValue(AssertionGenerationSettingsConfigurable.PATH_KEY);
         }

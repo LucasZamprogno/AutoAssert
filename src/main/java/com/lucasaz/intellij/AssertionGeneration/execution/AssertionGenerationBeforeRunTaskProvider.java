@@ -1,4 +1,4 @@
-package com.lucasaz.intellij.AssertionGeneration;
+package com.lucasaz.intellij.AssertionGeneration.execution;
 
 import com.intellij.execution.BeforeRunTaskProvider;
 import com.intellij.execution.configurations.RunConfiguration;
@@ -8,6 +8,10 @@ import com.intellij.openapi.application.NonBlockingReadAction;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.util.Key;
 import com.intellij.util.concurrency.NonUrgentExecutor;
+import com.lucasaz.intellij.AssertionGeneration.services.FileWatcher;
+import com.lucasaz.intellij.AssertionGeneration.util.Util;
+import com.lucasaz.intellij.AssertionGeneration.dto.Selected;
+import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

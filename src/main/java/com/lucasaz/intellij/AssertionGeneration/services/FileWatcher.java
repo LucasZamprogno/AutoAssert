@@ -1,8 +1,11 @@
-package com.lucasaz.intellij.AssertionGeneration;
+package com.lucasaz.intellij.AssertionGeneration.services;
 
 import com.intellij.openapi.application.NonBlockingReadAction;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.util.concurrency.NonUrgentExecutor;
+import com.lucasaz.intellij.AssertionGeneration.util.Util;
+import com.lucasaz.intellij.AssertionGeneration.dto.Selected;
+import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -28,7 +31,7 @@ public class FileWatcher extends Thread implements Runnable {
 
     private FileWatcher(Selected selected, WatchService watcher) {
             this.selected = selected;
-            this.path = Paths.get(selected.tsFilePath);
+            this.path = Paths.get(selected.getTsFilePath());
             this.stop = new AtomicBoolean(false);
             this.watcher = watcher;
     }
@@ -76,7 +79,7 @@ public class FileWatcher extends Thread implements Runnable {
 
     private void onFileCreate() {
         Path testOutputPath = Paths.get(this.path.getParent().toString(), Util.OUTFILE);
-        String runFile = Util.makeBackgroundFilename(this.selected.tsFilePath);
+        String runFile = Util.makeBackgroundFilename(this.selected.getTsFilePath());
         String runResult;
         try {
             runResult = Util.pathToFileContent(testOutputPath);
@@ -103,12 +106,12 @@ public class FileWatcher extends Thread implements Runnable {
 
     private String makeFinalFile(JSONObject observed) throws PluginException {
         String assertions = this.scuffedGenAssertions(observed);
-        return Util.spliceInto(this.selected.originalFile, assertions, this.selected.line);
+        return Util.spliceInto(this.selected.getOriginalFile(), assertions, this.selected.getLine());
     }
 
     private String scuffedGenAssertions(JSONObject observed) {
-        String name = this.selected.selected;
-        String ws = this.selected.whitespace;
+        String name = this.selected.getSelected();
+        String ws = this.selected.getWhitespace();
         String type = (String) observed.get("type");
         String lsp = System.getProperty("line.separator");
         String val;
