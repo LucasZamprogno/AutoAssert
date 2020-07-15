@@ -739,78 +739,79 @@ public class TypeScriptVisitor implements IVisitor<String> {
 			visitSyntheticReferenceExpression(node);
 		} else if (isKind(node, "Count")) {
 			visitCount(node);
-		} else if (isKind(node, "FirstAssignment")) {
-			visitFirstAssignment(node);
-		} else if (isKind(node, "LastAssignment")) {
-			visitLastAssignment(node);
-		} else if (isKind(node, "FirstCompoundAssignment")) {
-			visitFirstCompoundAssignment(node);
-		} else if (isKind(node, "LastCompoundAssignment")) {
-			visitLastCompoundAssignment(node);
-		} else if (isKind(node, "FirstReservedWord")) {
-			visitFirstReservedWord(node);
-		} else if (isKind(node, "LastReservedWord")) {
-			visitLastReservedWord(node);
-		} else if (isKind(node, "FirstKeyword")) {
-			visitFirstKeyword(node);
-		} else if (isKind(node, "LastKeyword")) {
-			visitLastKeyword(node);
-		} else if (isKind(node, "FirstFutureReservedWord")) {
-			visitFirstFutureReservedWord(node);
-		} else if (isKind(node, "LastFutureReservedWord")) {
-			visitLastFutureReservedWord(node);
-		} else if (isKind(node, "FirstTypeNode")) {
-			visitFirstTypeNode(node);
-		} else if (isKind(node, "LastTypeNode")) {
-			visitLastTypeNode(node);
-		} else if (isKind(node, "FirstPunctuation")) {
-			visitFirstPunctuation(node);
-		} else if (isKind(node, "LastPunctuation")) {
-			visitLastPunctuation(node);
-		} else if (isKind(node, "FirstToken")) {
-			visitFirstToken(node);
-		} else if (isKind(node, "LastToken")) {
-			visitLastToken(node);
-		} else if (isKind(node, "FirstTriviaToken")) {
-			visitFirstTriviaToken(node);
-		} else if (isKind(node, "LastTriviaToken")) {
-			visitLastTriviaToken(node);
-		} else if (isKind(node, "FirstLiteralToken")) {
-			visitFirstLiteralToken(node);
-		} else if (isKind(node, "LastLiteralToken")) {
-			visitLastLiteralToken(node);
-		} else if (isKind(node, "FirstTemplateToken")) {
-			visitFirstTemplateToken(node);
-		} else if (isKind(node, "LastTemplateToken")) {
-			visitLastTemplateToken(node);
-		} else if (isKind(node, "FirstBinaryOperator")) {
-			visitFirstBinaryOperator(node);
-		} else if (isKind(node, "LastBinaryOperator")) {
-			visitLastBinaryOperator(node);
-		} else if (isKind(node, "FirstStatement")) {
-			visitFirstStatement(node);
-		} else if (isKind(node, "LastStatement")) {
-			visitLastStatement(node);
-		} else if (isKind(node, "FirstNode")) {
-			visitFirstNode(node);
-		} else if (isKind(node, "FirstJSDocNode")) {
-			visitFirstJSDocNode(node);
-		} else if (isKind(node, "LastJSDocNode")) {
-			visitLastJSDocNode(node);
-		} else if (isKind(node, "FirstJSDocTagNode")) {
-			visitFirstJSDocTagNode(node);
-		} else if (isKind(node, "LastJSDocTagNode")) {
-			visitLastJSDocTagNode(node);
+//		} else if (isKind(node, "FirstAssignment")) {
+//			visitFirstAssignment(node);
+//		} else if (isKind(node, "LastAssignment")) {
+//			visitLastAssignment(node);
+//		} else if (isKind(node, "FirstCompoundAssignment")) {
+//			visitFirstCompoundAssignment(node);
+//		} else if (isKind(node, "LastCompoundAssignment")) {
+//			visitLastCompoundAssignment(node);
+//		} else if (isKind(node, "FirstReservedWord")) {
+//			visitFirstReservedWord(node);
+//		} else if (isKind(node, "LastReservedWord")) {
+//			visitLastReservedWord(node);
+//		} else if (isKind(node, "FirstKeyword")) {
+//			visitFirstKeyword(node);
+//		} else if (isKind(node, "LastKeyword")) {
+//			visitLastKeyword(node);
+//		} else if (isKind(node, "FirstFutureReservedWord")) {
+//			visitFirstFutureReservedWord(node);
+//		} else if (isKind(node, "LastFutureReservedWord")) {
+//			visitLastFutureReservedWord(node);
+//		} else if (isKind(node, "FirstTypeNode")) {
+//			visitFirstTypeNode(node);
+//		} else if (isKind(node, "LastTypeNode")) {
+//			visitLastTypeNode(node);
+//		} else if (isKind(node, "FirstPunctuation")) {
+//			visitFirstPunctuation(node);
+//		} else if (isKind(node, "LastPunctuation")) {
+//			visitLastPunctuation(node);
+//		} else if (isKind(node, "FirstToken")) {
+//			visitFirstToken(node);
+//		} else if (isKind(node, "LastToken")) {
+//			visitLastToken(node);
+//		} else if (isKind(node, "FirstTriviaToken")) {
+//			visitFirstTriviaToken(node);
+//		} else if (isKind(node, "LastTriviaToken")) {
+//			visitLastTriviaToken(node);
+//		} else if (isKind(node, "FirstLiteralToken")) {
+//			visitFirstLiteralToken(node);
+//		} else if (isKind(node, "LastLiteralToken")) {
+//			visitLastLiteralToken(node);
+//		} else if (isKind(node, "FirstTemplateToken")) {
+//			visitFirstTemplateToken(node);
+//		} else if (isKind(node, "LastTemplateToken")) {
+//			visitLastTemplateToken(node);
+//		} else if (isKind(node, "FirstBinaryOperator")) {
+//			visitFirstBinaryOperator(node);
+//		} else if (isKind(node, "LastBinaryOperator")) {
+//			visitLastBinaryOperator(node);
+//		} else if (isKind(node, "FirstStatement")) {
+//			visitFirstStatement(node);
+//		} else if (isKind(node, "LastStatement")) {
+//			visitLastStatement(node);
+//		} else if (isKind(node, "FirstNode")) {
+//			visitFirstNode(node);
+//		} else if (isKind(node, "FirstJSDocNode")) {
+//			visitFirstJSDocNode(node);
+//		} else if (isKind(node, "LastJSDocNode")) {
+//			visitLastJSDocNode(node);
+//		} else if (isKind(node, "FirstJSDocTagNode")) {
+//			visitFirstJSDocTagNode(node);
+//		} else if (isKind(node, "LastJSDocTagNode")) {
+//			visitLastJSDocTagNode(node);
 		} else {
 			visitChildren(node);
 		}
 	}
 
 	protected boolean isKind(V8Object node, String kind) {
-		if (!syntaxKindCache.containsKey(kind)) {
+		if (!syntaxKindCache.containsKey(kind) && syntaxKind.contains(kind)) {
 			syntaxKindCache.put(kind, syntaxKind.getInteger(kind));
 		}
-		return node.contains("kind") && node.getInteger("kind") == syntaxKindCache.get(kind);
+		return node.contains("kind") && syntaxKindCache.containsKey(kind) &&
+				node.getInteger("kind") == syntaxKindCache.get(kind);
 	}
 
 	protected void visitChildren(V8Object node) {
@@ -2172,129 +2173,129 @@ public class TypeScriptVisitor implements IVisitor<String> {
 		visitChildren(count);
 	}
 
-	protected void visitFirstAssignment(V8Object firstAssignment) {
-		visitChildren(firstAssignment);
-	}
-
-	protected void visitLastAssignment(V8Object lastAssignment) {
-		visitChildren(lastAssignment);
-	}
-
-	protected void visitFirstCompoundAssignment(V8Object firstCompoundAssignment) {
-		visitChildren(firstCompoundAssignment);
-	}
-
-	protected void visitLastCompoundAssignment(V8Object lastCompoundAssignment) {
-		visitChildren(lastCompoundAssignment);
-	}
-
-	protected void visitFirstReservedWord(V8Object firstReservedWord) {
-		visitChildren(firstReservedWord);
-	}
-
-	protected void visitLastReservedWord(V8Object lastReservedWord) {
-		visitChildren(lastReservedWord);
-	}
-
-	protected void visitFirstKeyword(V8Object firstKeyword) {
-		visitChildren(firstKeyword);
-	}
-
-	protected void visitLastKeyword(V8Object lastKeyword) {
-		visitChildren(lastKeyword);
-	}
-
-	protected void visitFirstFutureReservedWord(V8Object firstFutureReservedWord) {
-		visitChildren(firstFutureReservedWord);
-	}
-
-	protected void visitLastFutureReservedWord(V8Object lastFutureReservedWord) {
-		visitChildren(lastFutureReservedWord);
-	}
-
-	protected void visitFirstTypeNode(V8Object firstTypeNode) {
-		visitChildren(firstTypeNode);
-	}
-
-	protected void visitLastTypeNode(V8Object lastTypeNode) {
-		visitChildren(lastTypeNode);
-	}
-
-	protected void visitFirstPunctuation(V8Object firstPunctuation) {
-		visitChildren(firstPunctuation);
-	}
-
-	protected void visitLastPunctuation(V8Object lastPunctuation) {
-		visitChildren(lastPunctuation);
-	}
-
-	protected void visitFirstToken(V8Object firstToken) {
-		visitChildren(firstToken);
-	}
-
-	protected void visitLastToken(V8Object lastToken) {
-		visitChildren(lastToken);
-	}
-
-	protected void visitFirstTriviaToken(V8Object firstTriviaToken) {
-		visitChildren(firstTriviaToken);
-	}
-
-	protected void visitLastTriviaToken(V8Object lastTriviaToken) {
-		visitChildren(lastTriviaToken);
-	}
-
-	protected void visitFirstLiteralToken(V8Object firstLiteralToken) {
-		visitChildren(firstLiteralToken);
-	}
-
-	protected void visitLastLiteralToken(V8Object lastLiteralToken) {
-		visitChildren(lastLiteralToken);
-	}
-
-	protected void visitFirstTemplateToken(V8Object firstTemplateToken) {
-		visitChildren(firstTemplateToken);
-	}
-
-	protected void visitLastTemplateToken(V8Object lastTemplateToken) {
-		visitChildren(lastTemplateToken);
-	}
-
-	protected void visitFirstBinaryOperator(V8Object firstBinaryOperator) {
-		visitChildren(firstBinaryOperator);
-	}
-
-	protected void visitLastBinaryOperator(V8Object lastBinaryOperator) {
-		visitChildren(lastBinaryOperator);
-	}
-
-	protected void visitFirstStatement(V8Object firstStatement) {
-		visitChildren(firstStatement);
-	}
-
-	protected void visitLastStatement(V8Object lastStatement) {
-		visitChildren(lastStatement);
-	}
-
-	protected void visitFirstNode(V8Object firstNode) {
-		visitChildren(firstNode);
-	}
-
-	protected void visitFirstJSDocNode(V8Object firstJSDocNode) {
-		visitChildren(firstJSDocNode);
-	}
-
-	protected void visitLastJSDocNode(V8Object lastJSDocNode) {
-		visitChildren(lastJSDocNode);
-	}
-
-	protected void visitFirstJSDocTagNode(V8Object firstJSDocTagNode) {
-		visitChildren(firstJSDocTagNode);
-	}
-
-	protected void visitLastJSDocTagNode(V8Object lastJSDocTagNode) {
-		visitChildren(lastJSDocTagNode);
-	}
+//	protected void visitFirstAssignment(V8Object firstAssignment) {
+//		visitChildren(firstAssignment);
+//	}
+//
+//	protected void visitLastAssignment(V8Object lastAssignment) {
+//		visitChildren(lastAssignment);
+//	}
+//
+//	protected void visitFirstCompoundAssignment(V8Object firstCompoundAssignment) {
+//		visitChildren(firstCompoundAssignment);
+//	}
+//
+//	protected void visitLastCompoundAssignment(V8Object lastCompoundAssignment) {
+//		visitChildren(lastCompoundAssignment);
+//	}
+//
+//	protected void visitFirstReservedWord(V8Object firstReservedWord) {
+//		visitChildren(firstReservedWord);
+//	}
+//
+//	protected void visitLastReservedWord(V8Object lastReservedWord) {
+//		visitChildren(lastReservedWord);
+//	}
+//
+//	protected void visitFirstKeyword(V8Object firstKeyword) {
+//		visitChildren(firstKeyword);
+//	}
+//
+//	protected void visitLastKeyword(V8Object lastKeyword) {
+//		visitChildren(lastKeyword);
+//	}
+//
+//	protected void visitFirstFutureReservedWord(V8Object firstFutureReservedWord) {
+//		visitChildren(firstFutureReservedWord);
+//	}
+//
+//	protected void visitLastFutureReservedWord(V8Object lastFutureReservedWord) {
+//		visitChildren(lastFutureReservedWord);
+//	}
+//
+//	protected void visitFirstTypeNode(V8Object firstTypeNode) {
+//		visitChildren(firstTypeNode);
+//	}
+//
+//	protected void visitLastTypeNode(V8Object lastTypeNode) {
+//		visitChildren(lastTypeNode);
+//	}
+//
+//	protected void visitFirstPunctuation(V8Object firstPunctuation) {
+//		visitChildren(firstPunctuation);
+//	}
+//
+//	protected void visitLastPunctuation(V8Object lastPunctuation) {
+//		visitChildren(lastPunctuation);
+//	}
+//
+//	protected void visitFirstToken(V8Object firstToken) {
+//		visitChildren(firstToken);
+//	}
+//
+//	protected void visitLastToken(V8Object lastToken) {
+//		visitChildren(lastToken);
+//	}
+//
+//	protected void visitFirstTriviaToken(V8Object firstTriviaToken) {
+//		visitChildren(firstTriviaToken);
+//	}
+//
+//	protected void visitLastTriviaToken(V8Object lastTriviaToken) {
+//		visitChildren(lastTriviaToken);
+//	}
+//
+//	protected void visitFirstLiteralToken(V8Object firstLiteralToken) {
+//		visitChildren(firstLiteralToken);
+//	}
+//
+//	protected void visitLastLiteralToken(V8Object lastLiteralToken) {
+//		visitChildren(lastLiteralToken);
+//	}
+//
+//	protected void visitFirstTemplateToken(V8Object firstTemplateToken) {
+//		visitChildren(firstTemplateToken);
+//	}
+//
+//	protected void visitLastTemplateToken(V8Object lastTemplateToken) {
+//		visitChildren(lastTemplateToken);
+//	}
+//
+//	protected void visitFirstBinaryOperator(V8Object firstBinaryOperator) {
+//		visitChildren(firstBinaryOperator);
+//	}
+//
+//	protected void visitLastBinaryOperator(V8Object lastBinaryOperator) {
+//		visitChildren(lastBinaryOperator);
+//	}
+//
+//	protected void visitFirstStatement(V8Object firstStatement) {
+//		visitChildren(firstStatement);
+//	}
+//
+//	protected void visitLastStatement(V8Object lastStatement) {
+//		visitChildren(lastStatement);
+//	}
+//
+//	protected void visitFirstNode(V8Object firstNode) {
+//		visitChildren(firstNode);
+//	}
+//
+//	protected void visitFirstJSDocNode(V8Object firstJSDocNode) {
+//		visitChildren(firstJSDocNode);
+//	}
+//
+//	protected void visitLastJSDocNode(V8Object lastJSDocNode) {
+//		visitChildren(lastJSDocNode);
+//	}
+//
+//	protected void visitFirstJSDocTagNode(V8Object firstJSDocTagNode) {
+//		visitChildren(firstJSDocTagNode);
+//	}
+//
+//	protected void visitLastJSDocTagNode(V8Object lastJSDocTagNode) {
+//		visitChildren(lastJSDocTagNode);
+//	}
 }
 
 class NodeSingleton {
