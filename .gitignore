@@ -28,3 +28,7 @@ hs_err_pid*
 .idea
 build
 
+src/main/resources/node_modules
+
+mock-repo/node_modules
+mock-repo/package-lock.json

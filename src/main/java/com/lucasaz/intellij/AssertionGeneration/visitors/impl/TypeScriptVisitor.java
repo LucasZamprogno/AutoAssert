@@ -15,9 +15,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TypeScriptVisitor implements IVisitor<String> {
-	private static final String TYPESCRIPT_PATH = "TODO";
+	private static final String TYPESCRIPT_PATH = "node_modules/typescript/lib/typescript.js";
 
-	private final V8Object ts;
+	protected final V8Object ts;
 	private final V8Object syntaxKind;
 	private final MemoryManager scope;
 	private final NodeJS nodeJS;
@@ -45,12 +45,12 @@ public class TypeScriptVisitor implements IVisitor<String> {
 		int scriptTarget = scriptTargetEnum.getInteger("ES2015");
 		int scriptKind = scriptKindEnum.getInteger("TS");
 
-		// const sourceFile = createSourceFile(name, source, scriptTarget, true, scriptKind);
+		// const sourceFile = createSourceFile(name, source, scriptTarget, setParentNodes, scriptKind);
 		V8Array parameters = new V8Array(ts.getRuntime())
 				.push(name)
 				.push(source)
 				.push(scriptTarget)
-				.push(true) // TODO what is this parameter? I want a name
+				.push(true)
 				.push(scriptKind);
 		V8Object sourceFile = ts.executeObjectFunction("createSourceFile", parameters);
 
@@ -83,6 +83,10 @@ public class TypeScriptVisitor implements IVisitor<String> {
 			visitArrowFunction(node);
 		} else if (isKind(node, "FunctionExpression")) {
 			visitFunctionExpression(node);
+		} else if (isKind(node, "ExpressionStatement")) {
+			visitExpressionStatement(node);
+		} else if (isKind(node, "VariableDeclaration")) {
+			visitVariableDeclaration(node);
 		} else {
 			visitChildren(node);
 		}
@@ -128,5 +132,13 @@ public class TypeScriptVisitor implements IVisitor<String> {
 
 	protected void visitSourceFile(V8Object sourceFile) {
 		visitChildren(sourceFile);
+	}
+
+	protected void visitExpressionStatement(V8Object expressionStatement) {
+		visitChildren(expressionStatement);
+	}
+
+	protected void visitVariableDeclaration(V8Object variableDeclaration) {
+		visitChildren(variableDeclaration);
 	}
 }
