@@ -6,12 +6,12 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.lucasaz.intellij.AssertionGeneration.model.*;
-import com.lucasaz.intellij.AssertionGeneration.visitors.IVisitor;
 import com.lucasaz.intellij.AssertionGeneration.visitors.ProjectVisitor;
 import com.lucasaz.intellij.AssertionGeneration.visitors.impl.TypeScriptVisitor;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -134,9 +134,25 @@ public class VisitProject extends AnAction {
 				}
 			};
 
-			TypeScriptProjectVisitor projectVisitor = new TypeScriptProjectVisitor(tsVisitor);
+			ProjectVisitor projectVisitor = new ProjectVisitor(tsVisitor) {
+				@Override
+				protected boolean shouldVisitFile(Path filePath) {
+					String filePathString = filePath.toString();
+					return super.shouldVisitFile(filePath) && filePathString.endsWith(".ts")  && (filePathString.contains("test") || filePathString.contains(".spec"));
+				}
+
+				@Override
+				protected boolean shouldVisitDirectory(Path dirPath) {
+					return super.shouldVisitDirectory(dirPath) && !dirPath.toString().contains("node_modules");
+				}
+			};
 			projectVisitor.visit(basePath);
-			System.out.println("List length: " + testList.size());
+			projectVisitor.close();
+
+			PrintWriter printWriter = new PrintWriter("./test.txt");
+			String output = testList.toString();
+			printWriter.print(output);
+			printWriter.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -144,20 +160,4 @@ public class VisitProject extends AnAction {
 
 	@Override
 	public void update(@NotNull AnActionEvent anActionEvent){}
-}
-
-class TypeScriptProjectVisitor extends ProjectVisitor {
-	public TypeScriptProjectVisitor(IVisitor<String> sourceVisitor) {
-		super(sourceVisitor);
-	}
-
-	@Override
-	protected boolean shouldVisitFile(Path filePath) {
-		return super.shouldVisitFile(filePath) && filePath.toString().endsWith(".ts");
-	}
-
-	@Override
-	protected boolean shouldVisitDirectory(Path dirPath) {
-		return super.shouldVisitDirectory(dirPath) && !dirPath.toString().contains("node_modules");
-	}
 }

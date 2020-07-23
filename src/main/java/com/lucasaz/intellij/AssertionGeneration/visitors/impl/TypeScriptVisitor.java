@@ -3,32 +3,22 @@ package com.lucasaz.intellij.AssertionGeneration.visitors.impl;
 import com.eclipsesource.v8.*;
 import com.eclipsesource.v8.utils.MemoryManager;
 import com.lucasaz.intellij.AssertionGeneration.visitors.IVisitor;
-import org.apache.commons.io.FileUtils;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 public class TypeScriptVisitor implements IVisitor<String> {
-	private static final String TYPESCRIPT_PATH = "node_modules/typescript/lib/typescript.js";
 
 	protected final V8Object ts;
 	private final V8Object syntaxKind;
 	private final MemoryManager scope;
 
-	private final Map<String, Integer> syntaxKindCache = new HashMap<String, Integer>();
+	private static final Map<String, Integer> syntaxKindCache = new HashMap<String, Integer>();
 
 	public TypeScriptVisitor() throws IOException {
-		// TODO there must be a better way to do this
-		InputStream inputStream = TypeScriptVisitor.class.getClassLoader().getResourceAsStream(TYPESCRIPT_PATH);
-		File file = File.createTempFile("typescript", null);
-		file.deleteOnExit();
-		FileUtils.copyInputStreamToFile(inputStream, file);
-
-		scope = new MemoryManager(NodeSingleton.getInstance().getRuntime());
-		ts = NodeSingleton.getInstance().require(file);
+		ts = TSSingleton.getInstance().getTS();
+		scope = new MemoryManager(TSSingleton.getInstance().getRuntime());
 		syntaxKind = ts.getObject("SyntaxKind");
 	}
 
@@ -2296,28 +2286,4 @@ public class TypeScriptVisitor implements IVisitor<String> {
 //	protected void visitLastJSDocTagNode(V8Object lastJSDocTagNode) {
 //		visitChildren(lastJSDocTagNode);
 //	}
-}
-
-class NodeSingleton {
-	private static NodeSingleton instance;
-	private final NodeJS nodeJS;
-
-	public static NodeSingleton getInstance() {
-		if (instance == null) {
-			instance = new NodeSingleton();
-		}
-		return instance;
-	}
-
-	private NodeSingleton() {
-		nodeJS = NodeJS.createNodeJS();
-	}
-
-	public V8 getRuntime() {
-		return nodeJS.getRuntime();
-	}
-
-	public V8Object require(final File file) {
-		return nodeJS.require(file);
-	}
 }
