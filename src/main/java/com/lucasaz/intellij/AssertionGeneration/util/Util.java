@@ -5,6 +5,7 @@ import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -17,6 +18,25 @@ import java.util.List;
 public class Util {
     public static String PREFIX = "zzz-";
     public static String OUTFILE = ".testOutput";
+
+    public static final String volumeDir = "volumes";
+    public static final String logDir = "logs";
+    public static final String dev = "/home/lucas/tmp/";
+    public static final String prod = "/var/opt/classy/assertiongeneration/";
+    public static final String hostFSDir = Util.dev;
+    public static final String hostFSVolumeDir = Util.hostFSDir + Util.volumeDir;
+    public static final String hostFSLogDir = Util.hostFSDir + Util.logDir;
+
+    public static void writeFile(String path, String content) throws PluginException {
+        try {
+            FileWriter fw = new FileWriter(path);
+            fw.write(content);
+            fw.close();
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            throw new PluginException("Write failed", e);
+        }
+    }
 
     public static String spliceInto(String base, String toInsert, int index) throws PluginException {
         List<String> lines = Util.toLines(base);
@@ -43,8 +63,30 @@ public class Util {
         return sb.toString();
     }
 
+    public static void ensureDir(String path) {
+        new File(path).mkdirs();
+    }
+
+    public static void ensureDeleted(File file){
+        if (!file.exists()) {
+            return;
+        }
+        for (File subFile : file.listFiles()) {
+            if(subFile.isDirectory()) {
+                ensureDeleted(subFile);
+            } else {
+                subFile.delete();
+            }
+        }
+        file.delete();
+    }
+
     public static String pathToFileContent(Path filepath) throws IOException {
         return new String(Files.readAllBytes(filepath), StandardCharsets.UTF_8);
+    }
+
+    public static String joinStringPaths(String p1, String p2) {
+        return Paths.get(p1, p2).toString();
     }
 
     public static String getWhitespace(String line) {
