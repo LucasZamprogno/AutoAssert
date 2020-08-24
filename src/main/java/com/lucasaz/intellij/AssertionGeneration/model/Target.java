@@ -12,6 +12,10 @@ public class Target {
 	boolean includesPropertyAccess;
 	boolean includesCallExpression;
 	boolean includesIdentifier;
+	boolean isExpression;
+	boolean isIdentifier;
+	boolean isLiteral;
+	int depth;
 
 	@Override
 	public String toString() {

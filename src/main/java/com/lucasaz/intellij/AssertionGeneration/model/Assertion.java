@@ -11,22 +11,17 @@ import java.util.List;
 @Builder
 public class Assertion {
 	List<PropertyAccess> propertyAccesses;
-	Target target;
+	String filePath;
+	int start;
 
 	@Override
 	public String toString() {
 		StringBuilder stringBuilder = new StringBuilder();
-		stringBuilder.append("expect");
-
-		if (target != null) {
-			stringBuilder.append("(");
-			stringBuilder.append(target.toString());
-			stringBuilder.append(")");
-		}
 
 		for (PropertyAccess propertyAccess : propertyAccesses) {
 			stringBuilder.append(propertyAccess.toString());
 		}
+		stringBuilder.deleteCharAt(0);
 		stringBuilder.append(";");
 		return stringBuilder.toString();
 	}

@@ -65,6 +65,8 @@ public class ProjectVisitor implements IVisitor<Path> {
 	}
 
 	public void close() {
-		sourceVisitor.close();
+		if (sourceVisitor != null) {
+			sourceVisitor.close();
+		}
 	}
 }
