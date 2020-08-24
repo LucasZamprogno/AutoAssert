@@ -15,7 +15,9 @@ public class Target {
 	boolean isExpression;
 	boolean isIdentifier;
 	boolean isLiteral;
+	boolean isCall;
 	int depth;
+	String root;
 
 	@Override
 	public String toString() {

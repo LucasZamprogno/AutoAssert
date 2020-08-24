@@ -12,7 +12,6 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,6 +29,7 @@ public class MineAssertions {
 	static long expectedValueCount = 0;
 	static long expectedValueIsIdentifier = 0;
 	static long expectedValueIsLiteral = 0;
+	static long expectedValueIsCall = 0;
 	static List<Integer> propertyAccessDepths = new ArrayList<>();
 	static List<Integer> testAssertionCounts = new ArrayList<>();
 	static List<Integer> repoTestCounts = new ArrayList<>();
@@ -219,6 +219,11 @@ public class MineAssertions {
 										propertyAccesses.add(0, new PropertyAccess(getText(propertyAccessExpression.getObject("name"))));
 										visit(propertyAccessExpression.getObject("expression"));
 									}
+
+									@Override
+									protected void visitIdentifier(V8Object identifier) {
+										propertyAccesses.add(0, new PropertyAccess(getText(identifier)));
+									}
 								};
 								expressionVisitor.visit(expressionStatement);
 								expressionVisitor.close();
@@ -256,6 +261,7 @@ public class MineAssertions {
 								final boolean[] includesPropertyAccess = {false};
 								final boolean[] includesCallExpression = {false};
 								final boolean[] includesIdentifier = {false};
+								final String[] root = {null};
 								final int[] depth = {0};
 								TypeScriptVisitor targetVisitor = new TypeScriptVisitor() {
 									@Override
@@ -282,17 +288,19 @@ public class MineAssertions {
 									@Override
 									protected void visitIdentifier(V8Object identifier) {
 										includesIdentifier[0] = true;
+										root[0] = getText(identifier);
 									}
 								};
 								boolean isIdentifier = isKind(object, "Identifier") || isKind(object, "ThisKeyword"); // this ????
 								boolean isExpression = isExpression(object);
 								boolean isLiteral = isLiteral(object);
+								boolean isCall = isCall(object);
 								targetVisitor.visit(object);
 								targetVisitor.close();
 								if (isExpression) {
 									depth[0] = -1;
 								}
-								return new Target(text, includesPropertyAccess[0], includesCallExpression[0], includesIdentifier[0], isExpression, isIdentifier, isLiteral, depth[0]);
+								return new Target(text, includesPropertyAccess[0], includesCallExpression[0], includesIdentifier[0], isExpression, isIdentifier, isLiteral, isCall, depth[0], root[0]);
 							}
 
 							private boolean isLiteral(V8Object literal) {
@@ -342,6 +350,10 @@ public class MineAssertions {
 										isKind(expression, "NonNullExpression") ||
 										isKind(expression, "SyntheticExpression") ||
 										isKind(expression, "ExpressionStatement");
+							}
+
+							private boolean isCall(V8Object call) {
+								return isKind(call, "CallExpression");
 							}
 						};
 						String source = new String(Files.readAllBytes(filePath));
@@ -404,6 +416,9 @@ public class MineAssertions {
 								}
 								if (argument.isLiteral()) {
 									expectedValueIsLiteral++;
+								}
+								if (argument.isCall()) {
+									expectedValueIsCall++;
 								}
 							}
 						}
@@ -525,6 +540,7 @@ public class MineAssertions {
 		System.out.println("VALUES EXPECTED COUNT:" + expectedValueCount);
 		System.out.println("EXPECTED VALUE WAS IDENTIFIER:" + expectedValueIsIdentifier);
 		System.out.println("EXPECTED VALUE WAS LITERAL:" + expectedValueIsLiteral);
+		System.out.println("EXPECTED VALUE WAS CALL:" + expectedValueIsCall);
 		System.out.println();
 
 		System.out.println("SPITTING OUT REMAINING RAW DATA");
