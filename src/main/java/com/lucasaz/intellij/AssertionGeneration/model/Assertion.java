@@ -12,7 +12,7 @@ import java.util.List;
 public class Assertion {
 	List<PropertyAccess> propertyAccesses;
 	String filePath;
-	int start;
+	int line;
 
 	@Override
 	public String toString() {

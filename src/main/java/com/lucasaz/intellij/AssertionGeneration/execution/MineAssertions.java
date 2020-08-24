@@ -30,6 +30,7 @@ public class MineAssertions {
 	static long expectedValueCount = 0;
 	static long expectedValueIsIdentifier = 0;
 	static long expectedValueIsLiteral = 0;
+	static List<Integer> propertyAccessDepths = new ArrayList<>();
 	static List<Integer> testAssertionCounts = new ArrayList<>();
 	static List<Integer> repoTestCounts = new ArrayList<>();
 	static Map<String, Integer> propertyCounts = new HashMap<>();
@@ -105,13 +106,27 @@ public class MineAssertions {
 				protected void visitFile(Path filePath) {
 					try {
 						TypeScriptVisitor sourceVisitor = new TypeScriptVisitor() {
+							private V8Object sourceFile;
+
+							@Override
+							public void visit(String source) {
+								sourceFile = getSource(source);
+								visit(sourceFile);
+							}
+
+							@Override
+							public void close() {
+								sourceFile.release();
+								super.close();
+							}
+
 							private void visitExpressionImpl(V8Object expressionStatement) {
 								try {
 									if (isTest(expressionStatement)) {
-										tests.add(getTest(expressionStatement, filePath.toString()));
+										tests.add(getTest(expressionStatement, filePath.toString(), sourceFile));
 										return; // Don't continue with children
 									} else if (isAssertion(expressionStatement)) {
-										orphanAssertions.add(getAssertion(expressionStatement, filePath.toString()));
+										orphanAssertions.add(getAssertion(expressionStatement, filePath.toString(), sourceFile));
 										return; // Don't continue with children
 									}
 								} catch (Exception e) {
@@ -125,11 +140,6 @@ public class MineAssertions {
 							protected void visitExpressionStatement(V8Object expressionStatement) {
 								visitExpressionImpl(expressionStatement);
 							}
-
-//							@Override
-//							protected void visitJSDocTypeExpression(V8Object jsDocTypeExpression) {
-//								visitExpressionImpl(jsDocTypeExpression);
-//							}
 
 							private String getText(V8Object node) {
 								V8Array arguments = new V8Array(ts.getRuntime());
@@ -170,10 +180,13 @@ public class MineAssertions {
 								return false;
 							}
 
-							private Assertion getAssertion(V8Object expressionStatement, String filePath) throws IOException {
+							private Assertion getAssertion(V8Object expressionStatement, String filePath, V8Object sourceFile) throws IOException {
 								List<PropertyAccess> propertyAccesses = new ArrayList<>();
 
 								int start = expressionStatement.executeIntegerFunction("getStart", new V8Array(ts.getRuntime()));
+								V8Object lineAndCharacter = sourceFile
+										.executeObjectFunction("getLineAndCharacterOfPosition", new V8Array(ts.getRuntime()).push(start));
+								int line = lineAndCharacter.getInteger("line") + 1;
 
 								TypeScriptVisitor expressionVisitor = new TypeScriptVisitor() {
 									@Override
@@ -210,18 +223,21 @@ public class MineAssertions {
 								expressionVisitor.visit(expressionStatement);
 								expressionVisitor.close();
 
-								return new Assertion(propertyAccesses, filePath, start);
+								return new Assertion(propertyAccesses, filePath, line);
 							}
 
-							private Test getTest(V8Object expressionStatement, String filePath) throws IOException {
+							private Test getTest(V8Object expressionStatement, String filePath, V8Object sourceFile) throws IOException {
 								List<Assertion> testAssertions = new ArrayList<>();
 								int start = expressionStatement.executeIntegerFunction("getStart", new V8Array(ts.getRuntime()));
+								V8Object lineAndCharacter = sourceFile
+										.executeObjectFunction("getLineAndCharacterOfPosition", new V8Array(ts.getRuntime()).push(start));
+								int line = lineAndCharacter.getInteger("line") + 1;
 								TypeScriptVisitor testVisitor = new TypeScriptVisitor() {
 									@Override
 									protected void visitExpressionStatement(V8Object expressionStatement) {
 										try {
 											if (isAssertion(expressionStatement)) {
-												testAssertions.add(getAssertion(expressionStatement, filePath));
+												testAssertions.add(getAssertion(expressionStatement, filePath, sourceFile));
 											}
 										} catch (Exception e) {
 											System.out.println(e.toString());
@@ -232,7 +248,7 @@ public class MineAssertions {
 								};
 								testVisitor.visit(expressionStatement);
 								testVisitor.close();
-								return new Test(testAssertions, filePath, start);
+								return new Test(testAssertions, filePath, line);
 							}
 
 							private Target getTarget(V8Object object) throws IOException {
@@ -247,6 +263,13 @@ public class MineAssertions {
 										includesPropertyAccess[0] = true;
 										depth[0]++;
 										visit(propertyAccessExpression.getObject("expression"));
+									}
+
+									@Override
+									protected void visitElementAccessExpression(V8Object elementAccessExpression) {
+										includesPropertyAccess[0] = true;
+										depth[0]++;
+										visit(elementAccessExpression.getObject("expression"));
 									}
 
 									@Override
@@ -293,7 +316,7 @@ public class MineAssertions {
 								return // isKind(expression, "ArrayLiteralExpression") || // ??
 										// isKind(expression, "ObjectLiteralExpression") || // ??
 										// isKind(expression, "PropertyAccessExpression") || // ??
-										// isKind(expression, "ElementAccessExpression") || // ?? TODO keep track of this with property
+										// isKind(expression, "ElementAccessExpression") || // ??
 										// isKind(expression, "CallExpression") || // ??
 										isKind(expression, "NewExpression") ||
 										isKind(expression, "TaggedTemplateExpression") ||
@@ -365,6 +388,9 @@ public class MineAssertions {
 					}
 					if (assertingOn.isIncludesPropertyAccess()) {
 						assertOnExpWithPropAccess++;
+					}
+					if (assertingOn.getDepth() >= 0) {
+						propertyAccessDepths.add(assertingOn.getDepth());
 					}
 
 					for (int i = 1; i < assertion.getPropertyAccesses().size(); i = i + 1) {
@@ -501,16 +527,14 @@ public class MineAssertions {
 		System.out.println("EXPECTED VALUE WAS LITERAL:" + expectedValueIsLiteral);
 		System.out.println();
 
-		System.out.println("SPITTING OUT REMAINING RAW DATA...TODO");
+		System.out.println("SPITTING OUT REMAINING RAW DATA");
 
 		System.out.println("Assertions per test");
 		System.out.println(testAssertionCounts.toString());
 		System.out.println();
 
 		System.out.println("Target property access depth");
-		// TODO
-
-		// TODO keep track of SHAs
+		System.out.println(propertyAccessDepths.toString());
 	}
 
 	private static void deleteRepo(Path repo) throws Exception {

@@ -12,5 +12,5 @@ import java.util.List;
 public class Test {
     List<Assertion> assertions;
     String filePath;
-    int start;
+    int line;
 }

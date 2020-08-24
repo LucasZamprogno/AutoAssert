@@ -22,7 +22,7 @@ public class TypeScriptVisitor implements IVisitor<String> {
 		syntaxKind = ts.getObject("SyntaxKind");
 	}
 
-	public void visit(String source) {
+	protected V8Object getSource(String source) {
 		V8Object scriptTargetEnum = ts.getObject("ScriptTarget");
 		V8Object scriptKindEnum = ts.getObject("ScriptKind");
 
@@ -44,8 +44,12 @@ public class TypeScriptVisitor implements IVisitor<String> {
 		scriptKindEnum.release();
 		scriptTargetEnum.release();
 
-		visit(sourceFile);
+		return sourceFile;
+	}
 
+	public void visit(String source) {
+		V8Object sourceFile = getSource(source);
+		visit(sourceFile);
 		// release final unneeded object
 		sourceFile.release();
 	}
