@@ -28,12 +28,12 @@ public class Test {
             if (expectingValue(currentAssertion)) {
                 List<Assertion> block = new ArrayList<>();
                 block.add(currentAssertion);
-                Target expectingOn = getExpectingOn(currentAssertion);
-                if (!expectingOn.isExpression() && !expectingOn.isLiteral() && !expectingOn.isCall()) {
+                Target expectingOn = currentAssertion.getExpectingOn();
+                if (!expectingOn.isExpression() && !expectingOn.isLiteral() && !expectingOn.isCall()) { // TODO there is a bug here
                     while(i < assertions.size() &&
                             consecutiveLines(assertions.get(i - 1), assertions.get(i)) &&
                             expectingValue(assertions.get(i)) &&
-                            sameRootIdentifier(expectingOn, getExpectingOn(assertions.get(i)))) {
+                            sameRootIdentifier(expectingOn, assertions.get(i).getExpectingOn())) {
                         block.add(assertions.get(i));
                         i = i + 1;
                     }
@@ -41,7 +41,7 @@ public class Test {
                     while(i < assertions.size() &&
                             consecutiveLines(assertions.get(i - 1), assertions.get(i)) &&
                             expectingValue(assertions.get(i)) &&
-                            sameText(expectingOn, getExpectingOn(assertions.get(i)))) {
+                            sameText(expectingOn, assertions.get(i).getExpectingOn())) {
                         block.add(assertions.get(i));
                         i = i + 1;
                     }
@@ -59,11 +59,6 @@ public class Test {
         } else {
             return false;
         }
-    }
-
-    private Target getExpectingOn(Assertion assertion) {
-        Call call = (Call) assertion.getPropertyAccesses().get(0);
-        return call.getArguments().get(0);
     }
 
     private boolean consecutiveLines(Assertion firstAssertion, Assertion secondAssertion) {

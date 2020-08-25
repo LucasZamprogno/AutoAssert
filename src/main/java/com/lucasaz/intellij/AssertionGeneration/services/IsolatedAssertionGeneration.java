@@ -16,15 +16,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class AssertionGeneration {
+public class IsolatedAssertionGeneration {
     private static final String logFile = ".testOutput";
 
     public static String generateAssertions(int lineNum, String selected, String testFile, Task task) throws PluginException {
         long id = 0; // Hardcode this so we don't need to make changes
         try {
             // Make new instrumented file content
-            String singleTestOnly = AssertionGeneration.addOnlyToTargetTest(testFile, lineNum);
-            String newText = Util.spliceInto(singleTestOnly, AssertionGeneration.createInjectionStringList(selected), lineNum);
+            String singleTestOnly = IsolatedAssertionGeneration.addOnlyToTargetTest(testFile, lineNum);
+            String newText = Util.spliceInto(singleTestOnly, IsolatedAssertionGeneration.createInjectionStringList(selected), lineNum);
 
             // Write to disk
             System.out.println("Initializing volume");
@@ -40,20 +40,20 @@ public class AssertionGeneration {
             System.out.println(result.toString());
 
             // Make assertions + final file
-            String whitespace = AssertionGeneration.getWhitespaceFromLine(testFile, lineNum);
+            String whitespace = IsolatedAssertionGeneration.getWhitespaceFromLine(testFile, lineNum);
             JSONObject resObj = new JSONObject(result);
-            String assertions = AssertionGeneration.scuffedGenAssertions(resObj, selected, whitespace);
+            String assertions = IsolatedAssertionGeneration.scuffedGenAssertions(resObj, selected, whitespace);
             task.removeVolume(id);
             return assertions;
         } catch (PluginException | IOException | JSONException e) {
             System.out.println(e.getMessage());
             task.removeVolume(id);
-            return AssertionGeneration.makeFailCaseResponse(testFile, lineNum);
+            return IsolatedAssertionGeneration.makeFailCaseResponse(testFile, lineNum);
         }
     }
 
     private static String makeFailCaseResponse(String fileContent, int lineNumber) throws PluginException {
-        String whitespace = AssertionGeneration.getWhitespaceFromLine(fileContent, lineNumber);
+        String whitespace = IsolatedAssertionGeneration.getWhitespaceFromLine(fileContent, lineNumber);
         return whitespace + "// Failed to generate assertions\n";
     }
 
@@ -65,12 +65,12 @@ public class AssertionGeneration {
 
     private static String createInjectionStringList(String varName) throws IOException
     {
-        InputStream is = AssertionGeneration.class.getClassLoader().getResourceAsStream("injection.js");
+        InputStream is = IsolatedAssertionGeneration.class.getClassLoader().getResourceAsStream("injection.js");
         BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
         String recordingFunction = br.lines().collect(Collectors.joining("\n"));
         String save = "const longVarNameToNotClash = elemUnderTestGenerator(" + varName + ");";
-        String logRemoveMe = "console.log(__dirname + \"/\" + \"" + AssertionGeneration.logFile + "\")";
-        String log = "require(\"fs\").writeFileSync(__dirname + \"/\" + \"" + AssertionGeneration.logFile + "\", JSON.stringify(longVarNameToNotClash));";
+        String logRemoveMe = "console.log(__dirname + \"/\" + \"" + IsolatedAssertionGeneration.logFile + "\")";
+        String log = "require(\"fs\").writeFileSync(__dirname + \"/\" + \"" + IsolatedAssertionGeneration.logFile + "\", JSON.stringify(longVarNameToNotClash));";
         List<String> res = new ArrayList<>();
         res.add(recordingFunction);
         res.add(logRemoveMe);

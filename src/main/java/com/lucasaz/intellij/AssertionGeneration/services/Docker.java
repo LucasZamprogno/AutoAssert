@@ -20,7 +20,7 @@ public class Docker {
             String volumeFromFS = Util.hostFSVolumeDir + "/" + id;
             String hostTestDir = Util.joinStringPaths(volumeFromFS, task.testDir);
             String containerTestDir = Util.joinStringPaths(containerVolumeRoot, task.testDir);
-            String volumeTest = hostTestDir + ":" + containerTestDir;
+            String volumeTest = (hostTestDir + ":" + containerTestDir).replaceAll("\\\\", "/"); // TODO make this better
             DockerClient docker = DefaultDockerClient.fromEnv().build();
             HostConfig hc = HostConfig.builder().appendBinds(volumeTest).build();
             ContainerConfig cc = ContainerConfig.builder().image(task.image).hostConfig(hc).build();

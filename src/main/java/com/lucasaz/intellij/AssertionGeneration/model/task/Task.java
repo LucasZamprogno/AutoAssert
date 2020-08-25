@@ -2,6 +2,7 @@ package com.lucasaz.intellij.AssertionGeneration.model.task;
 
 import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
 import com.lucasaz.intellij.AssertionGeneration.util.Util;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +37,9 @@ public abstract class Task {
         String volTestPath = this.relToVolume(this.testDir, id);
         Util.ensureDir(volumePath);
         Util.ensureDir(volTestPath);
-        // FileUtils.copyDirectory(new File(this.relToServer(this.testDir)), new File(volTestPath)); // TODO This is what fails
+        File src = new File(this.relToServer(this.testDir));
+        File dst = new File(volTestPath);
+        FileUtils.copyDirectory(src, dst);
         Util.writeFile(Util.joinStringPaths(volTestPath, this.testFile), test);
     }
 
@@ -52,8 +55,8 @@ public abstract class Task {
         return Util.hostFSVolumeDir + "/" + String.valueOf(id) + "/" + path;
     }
 
-    public String relToServer(String path) { // TODO This needs to be change so it's a filepath to the right place
-        return this.taskName + "/" + path;
+    public String relToServer(String path) {
+        return Util.projectDir + "/temp/" + this.taskName + "/" + path;
     }
 
     public String relToUnzipped(String path) {

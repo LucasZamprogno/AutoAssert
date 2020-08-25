@@ -21,7 +21,8 @@ public class Util {
 
     public static final String volumeDir = "volumes";
     public static final String logDir = "logs";
-    public static final String dev = "/home/lucas/tmp/";
+    public static final String projectDir = "C:/Users/Braxton/Desktop/AssertionGeneration-Plugin/";
+    public static final String dev = Util.projectDir;
     public static final String prod = "/var/opt/classy/assertiongeneration/";
     public static final String hostFSDir = Util.dev;
     public static final String hostFSVolumeDir = Util.hostFSDir + Util.volumeDir;
@@ -102,7 +103,7 @@ public class Util {
     }
 
     public static List<String> toLines(String in) {
-        return new ArrayList<String>(Arrays.asList(in.split(System.getProperty("line.separator"))));
+        return new ArrayList<String>(Arrays.asList(in.split("[" + System.getProperty("line.separator") + "]")));
     }
 
     public static String findNearestTsconfig(String testFile, Project project) {

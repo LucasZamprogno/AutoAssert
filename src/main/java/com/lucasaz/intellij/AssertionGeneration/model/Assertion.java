@@ -14,6 +14,16 @@ public class Assertion {
 	String filePath;
 	int line;
 
+	public Target getExpectingOn() {
+		if (this.getPropertyAccesses().get(0) instanceof Call) {
+			Call call = (Call) this.getPropertyAccesses().get(0);
+			if (call.getArguments().size() > 0) {
+				return call.getArguments().get(0);
+			}
+		}
+		return null;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder stringBuilder = new StringBuilder();
