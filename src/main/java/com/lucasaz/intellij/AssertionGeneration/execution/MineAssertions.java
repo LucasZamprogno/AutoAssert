@@ -374,7 +374,7 @@ public class MineAssertions {
 								int line = firstAssertion.getLine() - 1;
 								Target assertingOn = firstAssertion.getExpectingOn();
 								String root;
-								if (!assertingOn.isCall() && !assertingOn.isLiteral() && !assertingOn.isExpression()) { // TODO there was a bug here
+								if (!assertingOn.isIncludesCallExpression() && !assertingOn.isLiteral() && !assertingOn.isExpression()) { // TODO there was a bug here
 									root = assertingOn.getRoot();
 								} else {
 									root = assertingOn.getText();

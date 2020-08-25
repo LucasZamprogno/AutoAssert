@@ -29,7 +29,7 @@ public class Test {
                 List<Assertion> block = new ArrayList<>();
                 block.add(currentAssertion);
                 Target expectingOn = currentAssertion.getExpectingOn();
-                if (!expectingOn.isExpression() && !expectingOn.isLiteral() && !expectingOn.isCall()) { // TODO there is a bug here
+                if (!expectingOn.isExpression() && !expectingOn.isLiteral() && !expectingOn.isIncludesCallExpression()) { // TODO there is a bug here
                     while(i < assertions.size() &&
                             consecutiveLines(assertions.get(i - 1), assertions.get(i)) &&
                             expectingValue(assertions.get(i)) &&
