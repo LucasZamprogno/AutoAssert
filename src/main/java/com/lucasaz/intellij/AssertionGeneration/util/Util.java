@@ -56,7 +56,7 @@ public class Util {
 
     // Modified from https://stackoverflow.com/questions/2509170/is-there-an-easy-way-to-concatenate-several-lines-of-text-into-a-string-without
     public static String createString(List<String> lines) {
-        String lsp = System.getProperty("line.separator");
+        String lsp = "\n";
         StringBuilder sb = new StringBuilder();
         for (String line : lines) {
             sb.append(line).append(lsp);
@@ -103,7 +103,7 @@ public class Util {
     }
 
     public static List<String> toLines(String in) {
-        return new ArrayList<String>(Arrays.asList(in.split("[" + System.getProperty("line.separator") + "]")));
+        return new ArrayList<String>(Arrays.asList(in.split("[\n]")));
     }
 
     public static String findNearestTsconfig(String testFile, Project project) {
