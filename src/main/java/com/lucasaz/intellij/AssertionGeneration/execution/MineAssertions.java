@@ -6,6 +6,7 @@ import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
 import com.lucasaz.intellij.AssertionGeneration.model.AssertionGenerationResponse;
 import com.lucasaz.intellij.AssertionGeneration.model.DynamicAnalysisResult;
 import com.lucasaz.intellij.AssertionGeneration.model.assertion.*;
+import com.lucasaz.intellij.AssertionGeneration.model.task.Nock;
 import com.lucasaz.intellij.AssertionGeneration.model.task.Typeset;
 import com.lucasaz.intellij.AssertionGeneration.model.task.Task;
 import com.lucasaz.intellij.AssertionGeneration.services.IsolatedAssertionGeneration;
@@ -382,8 +383,8 @@ public class MineAssertions {
 								} else {
 									root = assertingOn.getText();
 								}
-								String testFileRelativePath = filePath.toString().replace(repo.toString() + "/test/", "");
-								Task task = new Typeset("test", testFileRelativePath);
+								String testFileRelativePath = filePath.toString().replace(repo.toString() + "/tests/", "");
+								Task task = new Nock("tests", testFileRelativePath);
 								String newAssertions;
 								boolean error = false;
 								boolean differentBetweenRuns = false;
@@ -620,8 +621,7 @@ public class MineAssertions {
 		return Arrays.asList(
 //				"https://github.com/npm/npm",
 //				"https://github.com/palantir/blueprint",
-//				"https://github.com/node-nock/nock" // Duplicate?,
-//				"https://github.com/nock/nock" //,
+				"https://github.com/nock/nock" //,
 //				"https://github.com/ConsenSys/truffle",
 //				"https://github.com/DevExpress/testcafe", // Causes a crash?
 //				"https://github.com/sahat/satellizer",
@@ -632,7 +632,7 @@ public class MineAssertions {
 //				"https://github.com/apiaryio/dredd",
 //				"https://github.com/bitpay/copay",
 //				"https://github.com/huytd/agar.io-clone",
-				"https://github.com/davidmerfield/Typeset.js" //,
+//				"https://github.com/davidmerfield/Typeset" //,
 //				"https://github.com/electrode-io/electrode",
 //				"https://github.com/alibaba/uirecorder",
 //				"https://github.com/carteb/carte-blanche",

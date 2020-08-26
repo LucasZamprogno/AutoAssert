@@ -11,12 +11,10 @@ console.log("Removing testOutput");
 removeFile(outputPath);
 
 console.log("Before run 1");
-execSync(`cd ${projectDir} && ${runCommand}`, {timeout: 10 * 1000});
-let result1 = loadOutput();
+let result1 = runAndLoad(projectDir, runCommand);
 
 console.log("Before run 2");
-execSync(`cd ${projectDir} && ${runCommand}`, {timeout: 10 * 1000});
-let result2 = loadOutput();
+let result2 = runAndLoad(projectDir, runCommand);
 
 console.log("Before difference");
 
@@ -34,12 +32,22 @@ if (result1.hasDiff) {
 console.log("Before write");
 fs.writeFileSync(outputPath, JSON.stringify(result1));
 
-function loadOutput() {
+function runAndLoad(dir, cmd) {
     try {
-        return JSON.parse(fs.readFileSync(outputPath).toString());
+        execSync(`cd ${dir} && ${cmd}`, {timeout: 10 * 1000});
+        return loadOutput();
     } catch (e) {
-        return {timeout: true, type: "none"};
+        fs.writeFileSync(outputPath, JSON.stringify({type: "fail",
+            reason:"timeout probably",
+            value: null,
+            hasDiff: false
+        }));
+        throw "Rnu failed, ending container";
     }
+}
+
+function loadOutput() {
+    return JSON.parse(fs.readFileSync(outputPath).toString());
 }
 
 function bothObjects(res1, res2) {
