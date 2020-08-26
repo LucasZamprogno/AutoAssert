@@ -1,6 +1,7 @@
 package com.lucasaz.intellij.AssertionGeneration.services;
 
 import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
+import com.lucasaz.intellij.AssertionGeneration.model.AssertionGenerationResponse;
 import com.lucasaz.intellij.AssertionGeneration.model.task.Task;
 import com.lucasaz.intellij.AssertionGeneration.util.Util;
 import org.json.JSONArray;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 public class IsolatedAssertionGeneration {
     private static final String logFile = ".testOutput";
 
-    public static String generateAssertions(int lineNum, String selected, String testFile, Task task) throws PluginException {
+    public static AssertionGenerationResponse generateAssertions(int lineNum, String selected, String testFile, Task task) throws PluginException {
         long id = 0; // Hardcode this so we don't need to make changes
         try {
             // Make new instrumented file content
@@ -44,11 +45,11 @@ public class IsolatedAssertionGeneration {
             JSONObject resObj = new JSONObject(result);
             String assertions = IsolatedAssertionGeneration.scuffedGenAssertions(resObj, selected, whitespace);
             task.removeVolume(id);
-            return assertions;
+            return new AssertionGenerationResponse(assertions, resObj.getBoolean("hasDiff"));
         } catch (PluginException | IOException | JSONException e) {
             System.out.println(e.getMessage());
             task.removeVolume(id);
-            return IsolatedAssertionGeneration.makeFailCaseResponse(testFile, lineNum);
+            return new AssertionGenerationResponse(IsolatedAssertionGeneration.makeFailCaseResponse(testFile, lineNum), false);
         }
     }
 
@@ -143,6 +144,8 @@ public class IsolatedAssertionGeneration {
                 toReturn.append(ws).append("expect(varName).to.be.a(resType); // Typecheck similar to typeof operator").append(lsp);
                 toReturn.append(ws).append("expect(varName).to.deep.equal(").append(val).append("); // \"deep\" keyword for value equality").append(lsp);
                 break;
+            case "none":
+                toReturn.append(ws).append("// Assertion generation timed out");
             default:
                 // Should never happen
                 toReturn.append(ws).append("// Assertion generation failed, please make sure you selected the appropriate").append(lsp);
