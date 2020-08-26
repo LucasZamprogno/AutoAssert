@@ -3,7 +3,7 @@ package com.lucasaz.intellij.AssertionGeneration.execution;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
-import com.lucasaz.intellij.AssertionGeneration.model.*;
+import com.lucasaz.intellij.AssertionGeneration.model.assertion.Assertion;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;

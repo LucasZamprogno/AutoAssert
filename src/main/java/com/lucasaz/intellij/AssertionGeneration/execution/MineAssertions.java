@@ -3,7 +3,8 @@ package com.lucasaz.intellij.AssertionGeneration.execution;
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
 import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
-import com.lucasaz.intellij.AssertionGeneration.model.*;
+import com.lucasaz.intellij.AssertionGeneration.model.DynamicAnalysisResult;
+import com.lucasaz.intellij.AssertionGeneration.model.assertion.*;
 import com.lucasaz.intellij.AssertionGeneration.model.task.Typeset;
 import com.lucasaz.intellij.AssertionGeneration.model.task.Task;
 import com.lucasaz.intellij.AssertionGeneration.services.IsolatedAssertionGeneration;
@@ -36,6 +37,7 @@ public class MineAssertions {
 	static long expectedValueIsCall = 0;
 	static List<Integer> propertyAccessDepths = new ArrayList<>();
 	static List<Integer> testAssertionCounts = new ArrayList<>();
+	static List<Integer> expectKeywordCounts = new ArrayList<>();
 	static List<Integer> repoTestCounts = new ArrayList<>();
 	static Map<String, Integer> propertyCounts = new HashMap<>();
 	static Map<String, Integer> propertyProjectCounts = new HashMap<>();
@@ -304,7 +306,7 @@ public class MineAssertions {
 								boolean isCall = isCall(object);
 								targetVisitor.visit(object);
 								targetVisitor.close();
-								if (isExpression) {
+								if (isExpression || isLiteral || includesCallExpression[0]) {
 									depth[0] = -1;
 								}
 								return new Target(text, includesPropertyAccess[0], includesCallExpression[0], includesIdentifier[0], isExpression, isIdentifier, isLiteral, isCall, depth[0], root[0]);
@@ -374,20 +376,32 @@ public class MineAssertions {
 								int line = firstAssertion.getLine() - 1;
 								Target assertingOn = firstAssertion.getExpectingOn();
 								String root;
-								if (!assertingOn.isIncludesCallExpression() && !assertingOn.isLiteral() && !assertingOn.isExpression()) { // TODO there was a bug here
+								if (!assertingOn.isIncludesCallExpression() && !assertingOn.isLiteral() && !assertingOn.isExpression()) {
 									root = assertingOn.getRoot();
 								} else {
 									root = assertingOn.getText();
 								}
 								String testFileRelativePath = filePath.toString().replace(repo.toString() + "/test/", "");
 								Task task = new Typeset("test", testFileRelativePath);
+								String newAssertions;
+								boolean error = false;
+								boolean differentBetweenRuns = false;
 								try {
-									String newAssertions = IsolatedAssertionGeneration.generateAssertions(line, root, source, task);
+									newAssertions = IsolatedAssertionGeneration.generateAssertions(line, root, source, task);
 									System.out.println(newAssertions);
+									// TODO get `differentBetweenRuns`
 								} catch (PluginException pluginException) {
-									// oh well too bad // TODO
+									newAssertions = "";
+									error = true;
 								}
-
+								// TODO save `result`
+								DynamicAnalysisResult result = new DynamicAnalysisResult(
+										block,
+										testFileRelativePath,
+										differentBetweenRuns,
+										error,
+										newAssertions
+								);
 							}
 						}
 					} catch (IOException ioException) {
@@ -418,6 +432,7 @@ public class MineAssertions {
 				Call call = (Call) assertion.getPropertyAccesses().get(0);
 				if (call.getArguments().size() > 0 && call.getText().equals("expect")) {
 					expectCount++;
+					expectKeywordCounts.add(assertion.getPropertyAccesses().size());
 					Target assertingOn = call.getArguments().get(0);
 					if (assertingOn.isIdentifier()) {
 						assertOnIdentifierCount++;
@@ -581,6 +596,11 @@ public class MineAssertions {
 
 		System.out.println("Target property access depth");
 		System.out.println(propertyAccessDepths.toString());
+		System.out.println();
+
+		System.out.println("Number of keywords in expect assertions");
+		System.out.println(expectKeywordCounts.toString());
+		System.out.println();
 	}
 
 	private static void deleteRepo(Path repo) throws Exception {

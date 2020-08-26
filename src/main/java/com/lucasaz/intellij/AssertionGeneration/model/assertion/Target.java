@@ -1,4 +1,4 @@
-package com.lucasaz.intellij.AssertionGeneration.model;
+package com.lucasaz.intellij.AssertionGeneration.model.assertion;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
