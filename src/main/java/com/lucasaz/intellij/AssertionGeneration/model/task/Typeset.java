@@ -7,6 +7,6 @@ public class Typeset extends Task
         super("davidmerfield-Typeset.js",
                 testDirPath,
                 testFileName,
-                "assertion-typeset-runner");
+                "mining-typeset-runner");
     }
 }
