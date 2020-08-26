@@ -3,6 +3,7 @@ package com.lucasaz.intellij.AssertionGeneration.execution;
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
 import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
+import com.lucasaz.intellij.AssertionGeneration.model.AssertionGenerationResponse;
 import com.lucasaz.intellij.AssertionGeneration.model.DynamicAnalysisResult;
 import com.lucasaz.intellij.AssertionGeneration.model.assertion.*;
 import com.lucasaz.intellij.AssertionGeneration.model.task.Typeset;
@@ -387,9 +388,9 @@ public class MineAssertions {
 								boolean error = false;
 								boolean differentBetweenRuns = false;
 								try {
-									newAssertions = IsolatedAssertionGeneration.generateAssertions(line, root, source, task);
-									System.out.println(newAssertions);
-									// TODO get `differentBetweenRuns`
+									AssertionGenerationResponse response = IsolatedAssertionGeneration.generateAssertions(line, root, source, task);
+									newAssertions = response.getGeneratedAssertions();
+									differentBetweenRuns = response.isDifferentBetweenRuns();
 								} catch (PluginException pluginException) {
 									newAssertions = "";
 									error = true;

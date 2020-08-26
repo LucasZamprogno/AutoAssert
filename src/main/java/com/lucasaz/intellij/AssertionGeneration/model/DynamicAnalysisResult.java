@@ -7,11 +7,15 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-@AllArgsConstructor
-public class DynamicAnalysisResult {
+public class DynamicAnalysisResult extends AssertionGenerationResponse {
     List<Assertion> associatedBlock;
     String sourceFilePath;
-    boolean differentBetweenRuns;
     boolean error;
-    String generatedAssertions;
+
+    public DynamicAnalysisResult(List<Assertion> associatedBlock, String sourceFilePath, boolean differentBetweenRuns, boolean error, String generatedAssertions) {
+        super(generatedAssertions, differentBetweenRuns);
+        this.associatedBlock = associatedBlock;
+        this.sourceFilePath = sourceFilePath;
+        this.error = error;
+    }
 }

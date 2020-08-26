@@ -7,12 +7,15 @@ const outputPath = `${projectDir}/test/.testOutput`;
 const runCommand = "npm run test"; 
 // Import these somehow?
 
+console.log("Removing testOutput");
+removeFile(outputPath);
+
 console.log("Before run 1");
-execSync(`cd ${projectDir} && ${runCommand}`);
+execSync(`cd ${projectDir} && ${runCommand}`, {timeout: 10 * 1000});
 let result1 = loadOutput();
 
 console.log("Before run 2");
-execSync(`cd ${projectDir} && ${runCommand}`);
+execSync(`cd ${projectDir} && ${runCommand}`, {timeout: 10 * 1000});
 let result2 = loadOutput();
 
 console.log("Before difference");
@@ -32,7 +35,11 @@ console.log("Before write");
 fs.writeFileSync(outputPath, JSON.stringify(result1));
 
 function loadOutput() {
-    return JSON.parse(fs.readFileSync(outputPath).toString());
+    try {
+        return JSON.parse(fs.readFileSync(outputPath).toString());
+    } catch (e) {
+        return {timeout: true, type: "none"};
+    }
 }
 
 function bothObjects(res1, res2) {
@@ -41,6 +48,16 @@ function bothObjects(res1, res2) {
 
 function bothArrOrSet(res1, res2) {
     return res1.type === res2.type && (res1.type === 'array' || res2.type === 'set');
+}
+
+function removeFile(fileName) {
+    try {
+        if (fs.existsSync(fileName)) {
+            fs.unlinkSync(fileName);
+        }
+    } catch (e) {
+        // Just in case
+    }
 }
 
 /*
