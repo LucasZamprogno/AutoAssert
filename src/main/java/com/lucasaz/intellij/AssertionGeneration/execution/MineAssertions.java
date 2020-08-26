@@ -19,6 +19,7 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -384,7 +385,14 @@ public class MineAssertions {
 									root = assertingOn.getText();
 								}
 								String testFileRelativePath = filePath.toString().replace(repo.toString() + "/tests/", "");
-								Task task = new Nock("tests", testFileRelativePath);
+								Task task;
+								if (repo.toString().contains("nock")) {
+									task = new Nock("tests", testFileRelativePath);
+								} else if (repo.toString().contains("Typeset")) {
+									task = new Typeset("test", testFileRelativePath);
+								} else {
+									return;
+								}
 								String newAssertions;
 								boolean error = false;
 								boolean differentBetweenRuns = false;
@@ -396,7 +404,6 @@ public class MineAssertions {
 									newAssertions = "";
 									error = true;
 								}
-								// TODO save `result`
 								DynamicAnalysisResult result = new DynamicAnalysisResult(
 										block,
 										testFileRelativePath,
@@ -404,6 +411,7 @@ public class MineAssertions {
 										error,
 										newAssertions
 								);
+								saveResultToFile(repo.toString(), result);
 							}
 						}
 					} catch (IOException ioException) {
@@ -472,6 +480,19 @@ public class MineAssertions {
 					}
 				}
 			}
+		}
+	}
+
+	private static void saveResultToFile(String repo, DynamicAnalysisResult result) {
+		String fileName = "./save/dynamic/" + repo + result.getSourceFilePath() + expectCount;
+		try {
+			File file = new File(fileName);
+			file.createNewFile();
+			PrintWriter printWriter = new PrintWriter(fileName);
+			printWriter.print(result.toString());
+			printWriter.close();
+		} catch (Exception exception) {
+			// Whatever forget it
 		}
 	}
 
@@ -621,7 +642,7 @@ public class MineAssertions {
 		return Arrays.asList(
 //				"https://github.com/npm/npm",
 //				"https://github.com/palantir/blueprint",
-				"https://github.com/nock/nock" //,
+				"https://github.com/nock/nock",
 //				"https://github.com/ConsenSys/truffle",
 //				"https://github.com/DevExpress/testcafe", // Causes a crash?
 //				"https://github.com/sahat/satellizer",
@@ -632,7 +653,7 @@ public class MineAssertions {
 //				"https://github.com/apiaryio/dredd",
 //				"https://github.com/bitpay/copay",
 //				"https://github.com/huytd/agar.io-clone",
-//				"https://github.com/davidmerfield/Typeset" //,
+				"https://github.com/davidmerfield/Typeset" //,
 //				"https://github.com/electrode-io/electrode",
 //				"https://github.com/alibaba/uirecorder",
 //				"https://github.com/carteb/carte-blanche",
