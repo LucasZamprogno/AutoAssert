@@ -9,6 +9,7 @@ import com.lucasaz.intellij.AssertionGeneration.model.assertion.*;
 import com.lucasaz.intellij.AssertionGeneration.model.task.Nock;
 import com.lucasaz.intellij.AssertionGeneration.model.task.Typeset;
 import com.lucasaz.intellij.AssertionGeneration.model.task.Task;
+import com.lucasaz.intellij.AssertionGeneration.services.EqualitySpecifier;
 import com.lucasaz.intellij.AssertionGeneration.services.IsolatedAssertionGeneration;
 import com.lucasaz.intellij.AssertionGeneration.visitors.ProjectVisitor;
 import com.lucasaz.intellij.AssertionGeneration.visitors.impl.TypeScriptVisitor;
@@ -17,15 +18,15 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
 public class MineAssertions {
+	static boolean DYNAMIC_RUN = false;
+
 	static long orphanAssertions = 0;
 	static long numberOfProjects = 0;
 	static long nonZeroTestRepoCount = 0;
@@ -51,10 +52,12 @@ public class MineAssertions {
 		for (String repoUrl : repoUrls) {
 			try {
 				System.out.println("Getting assertions for " + repoUrl);
+				BufferedWriter bw = createEqualityAssertionsFile(repoUrl);
 				Path repoPath = cloneRepo(repoUrl);
 				Repo repo = mineRepo(repoPath, repoUrl);
-				saveAssertions(repo, repoUrl);
+				saveAssertions(repo, repoUrl, bw);
 				deleteRepo(repoPath);
+				closeEqualityAssertionsFile(bw);
 			} catch (Exception exception) {
 				System.out.println("Failed to get assertions for " +  repoUrl);
 				exception.printStackTrace();
@@ -63,6 +66,32 @@ public class MineAssertions {
 		}
 
 		printDetails();
+	}
+
+	private static BufferedWriter createEqualityAssertionsFile(String repoUrl) {
+		BufferedWriter bufferedWriter = null;
+		try {
+			File file = new File("./save/equality/" + repoUrl
+					.replace("https://github.com/", "")
+					.replaceAll("/", "-"));
+			if(!file.exists()) {
+				file.createNewFile();
+			}
+			FileWriter fileWriter = new FileWriter(file.getName(), true);
+			bufferedWriter = new BufferedWriter(fileWriter);
+			bufferedWriter.write("INCLUSION,NULL,UNDEFINED,BOOL,TYPEOF,INSTANCEOF,NUMERIC,TRUTHINESS");
+		} catch(IOException e){
+			e.printStackTrace();
+		}
+		return bufferedWriter;
+	}
+
+	private static void closeEqualityAssertionsFile(BufferedWriter bufferedWriter) {
+		try {
+			bufferedWriter.close();
+		} catch (IOException ioException) {
+			ioException.printStackTrace();
+		}
 	}
 
 	private static Path cloneRepo(String repoUrl) throws Exception {
@@ -101,9 +130,13 @@ public class MineAssertions {
 				@Override
 				protected boolean shouldVisitFile(Path filePath) {
 					String filePathString = filePath.toString();
-					return super.shouldVisitFile(filePath) &&
+					boolean shouldVisit = super.shouldVisitFile(filePath) &&
 							(filePathString.endsWith(".ts") || filePathString.endsWith(".js"))  &&
 							(filePathString.contains("test") || filePathString.contains("spec"));
+					if (shouldVisit) {
+						System.out.println(filePathString);
+					}
+					return shouldVisit;
 				}
 
 				@Override
@@ -194,6 +227,7 @@ public class MineAssertions {
 
 							private Assertion getAssertion(V8Object expressionStatement, String filePath, V8Object sourceFile) throws IOException {
 								List<PropertyAccess> propertyAccesses = new ArrayList<>();
+								Map<Target, V8Object> mapToV8Node = new HashMap<>();
 
 								int start = expressionStatement.executeIntegerFunction("getStart", new V8Array(ts.getRuntime()));
 								V8Object lineAndCharacter = sourceFile
@@ -209,14 +243,17 @@ public class MineAssertions {
 											V8Array v8ArgumentArray = callExpression.getArray("arguments");
 											int numArguments = v8ArgumentArray.length();
 											for (int i = 0; i < numArguments; i++) {
-												arguments.add(getTarget(v8ArgumentArray.getObject(i)));
+												V8Object v8Node = v8ArgumentArray.getObject(i);
+												Target target = getTarget(v8Node);
+												mapToV8Node.put(target, v8Node);
+												arguments.add(target);
 											}
 											// if expression is an identifier, we must be done
 											V8Object parentExpression = callExpression.getObject("expression");
 											if (isKind(parentExpression, "Identifier")) {
 												String identifier = getText(parentExpression);
 												propertyAccesses.add(0, new Call(identifier, arguments));
-											} else {
+											} else if (isKind(parentExpression, "PropertyAccessExpression")) {
 												String propertyName = getText(parentExpression.getObject("name"));
 												propertyAccesses.add(0, new Call(propertyName, arguments));
 												visit(parentExpression.getObject("expression"));
@@ -238,9 +275,17 @@ public class MineAssertions {
 									}
 								};
 								expressionVisitor.visit(expressionStatement);
+
+								Assertion assertion = new Assertion(propertyAccesses, filePath, line);
+								if (EqualitySpecifier.isInEqualityCategory(assertion)) {
+									assertion = EqualitySpecifier.getEqualityDetails(assertion, mapToV8Node);
+								}
+
+								// this line must be after the last use of the map
+								// or else it will release all the objects inside
 								expressionVisitor.close();
 
-								return new Assertion(propertyAccesses, filePath, line);
+								return assertion;
 							}
 
 							private Test getTest(V8Object expressionStatement, String filePath, V8Object sourceFile) throws IOException {
@@ -373,6 +418,10 @@ public class MineAssertions {
 						sourceVisitor.visit(source);
 						sourceVisitor.close();
 
+						if (!DYNAMIC_RUN) {
+							return;
+						}
+
 						for (Test test : testsInThisFile) {
 							for (List<Assertion> block : test.getAssertionBlocks()) {
 								Assertion firstAssertion = block.get(0);
@@ -429,7 +478,7 @@ public class MineAssertions {
 		}
 	}
 
-	private static void incPropertyCounts(List<Assertion> assertions) {
+	private static void saveAssertionData(List<Assertion> assertions, BufferedWriter bufferedWriter) {
 		for (Assertion assertion : assertions) {
 			for (PropertyAccess propertyAccess : assertion.getPropertyAccesses()) {
 				if (!propertyCounts.containsKey(propertyAccess.getText())) {
@@ -480,6 +529,35 @@ public class MineAssertions {
 					}
 				}
 			}
+			if (assertion instanceof EqualityAssertion) {
+				appendToEqualityFile((EqualityAssertion) assertion, bufferedWriter);
+			}
+		}
+	}
+
+	private static void appendToEqualityFile(EqualityAssertion assertion, BufferedWriter bufferedWriter) {
+		StringBuilder row = new StringBuilder();
+		row.append(assertion.isEqInclusion());
+		row.append(",");
+		row.append(assertion.isEqNull());
+		row.append(",");
+		row.append(assertion.isEqUndefined());
+		row.append(",");
+		row.append(assertion.isEqBoolean());
+		row.append(",");
+		row.append(assertion.isEqTypeof());
+		row.append(",");
+		row.append(assertion.isEqInstanceOf());
+		row.append(",");
+		row.append(assertion.isEqNumeric());
+		row.append(",");
+		row.append(assertion.isEqTruthiness());
+		row.append(",");
+		row.append(assertion.isEqLength());
+		try {
+			bufferedWriter.write(row.toString());
+		} catch (IOException ioException) {
+			ioException.printStackTrace();
 		}
 	}
 
@@ -496,7 +574,7 @@ public class MineAssertions {
 		}
 	}
 
-	private static void saveAssertions(Repo repo, String repoUrl) throws Exception {
+	private static void saveAssertions(Repo repo, String repoUrl, BufferedWriter bufferedWriter) throws Exception {
 //		System.out.println("saving assertions");
 //		String fileName = "./save/meta/" + repoUrl
 //				.replace("https://github.com/", "")
@@ -531,11 +609,11 @@ public class MineAssertions {
 
 		numberOfProjects += 1;
 		orphanAssertions += repo.getOrphanAssertions().size();
-		incPropertyCounts(repo.getOrphanAssertions());
+		saveAssertionData(repo.getOrphanAssertions(), bufferedWriter);
 		addToSet(repo.getOrphanAssertions(), projectProperties);
 		for (Test test : repo.getTests()) {
 			testAssertionCounts.add(test.getAssertions().size());
-			incPropertyCounts(test.getAssertions());
+			saveAssertionData(test.getAssertions(), bufferedWriter);
 			addToSet(test.getAssertions(), projectProperties);
 		}
 		for (String property : projectProperties) {
