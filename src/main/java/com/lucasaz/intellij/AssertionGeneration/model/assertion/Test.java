@@ -25,14 +25,14 @@ public class Test {
         while(i < assertions.size()) {
             Assertion currentAssertion = assertions.get(i);
             i = i + 1;
-            if (expectingValue(currentAssertion)) {
+            if (currentAssertion.isExpectingValue()) {
                 List<Assertion> block = new ArrayList<>();
                 block.add(currentAssertion);
                 Target expectingOn = currentAssertion.getExpectingOn();
                 if (!expectingOn.isExpression() && !expectingOn.isLiteral() && !expectingOn.isIncludesCallExpression()) {
                     while(i < assertions.size() &&
                             consecutiveLines(assertions.get(i - 1), assertions.get(i)) &&
-                            expectingValue(assertions.get(i)) &&
+                            assertions.get(i).isExpectingValue() &&
                             sameRootIdentifier(expectingOn, assertions.get(i).getExpectingOn())) {
                         block.add(assertions.get(i));
                         i = i + 1;
@@ -40,7 +40,7 @@ public class Test {
                 } else {
                     while(i < assertions.size() &&
                             consecutiveLines(assertions.get(i - 1), assertions.get(i)) &&
-                            expectingValue(assertions.get(i)) &&
+                            assertions.get(i).isExpectingValue() &&
                             sameText(expectingOn, assertions.get(i).getExpectingOn())) {
                         block.add(assertions.get(i));
                         i = i + 1;
@@ -50,15 +50,6 @@ public class Test {
             }
         }
         return blocks;
-    }
-
-    private boolean expectingValue(Assertion assertion) {
-        if (assertion.getPropertyAccesses().get(0) instanceof Call) {
-            Call call = (Call) assertion.getPropertyAccesses().get(0);
-            return (call.getArguments().size() > 0 && call.getText().equals("expect"));
-        } else {
-            return false;
-        }
     }
 
     private boolean consecutiveLines(Assertion firstAssertion, Assertion secondAssertion) {

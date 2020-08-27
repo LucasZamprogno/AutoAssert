@@ -800,7 +800,7 @@ public class TypeScriptVisitor implements IVisitor<String> {
 		}
 	}
 
-	protected boolean isKind(V8Object node, String kind) {
+	public boolean isKind(V8Object node, String kind) {
 		if (!syntaxKindCache.containsKey(kind) && syntaxKind.contains(kind)) {
 			syntaxKindCache.put(kind, syntaxKind.getInteger(kind));
 		}
