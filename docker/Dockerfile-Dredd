@@ -7,6 +7,10 @@ WORKDIR /app/main/packages/dredd-transactions
 
 RUN npm install
 
+WORKDIR /app/main/packages/dredd
+
+RUN npm install
+
 WORKDIR /app/main-runner
 
 RUN npm install
