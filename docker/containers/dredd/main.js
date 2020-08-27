@@ -4,9 +4,14 @@ const fs = require("fs");
 const execSync = require("child_process").execSync;
 
 const testDir = process.env.TEST_DIR;
-
-const projectDir = "../main/packages/dredd-transactions";
-const outputPath = `${projectDir}/test/unit/.testOutput`; // TODO fix with param
+console.log(testDir);
+let split = testDir.split("/");
+let firstPart = split.slice(1, 3).join("/");
+let secondPart = split.slice(3).join("/");
+console.log(firstPart);
+console.log(secondPart);
+const projectDir = `../main/${firstPart}`;
+const outputPath = `${projectDir}/${secondPart}/.testOutput`; // TODO fix with param
 const runCommand = "npm run test"; 
 // Import these somehow?
 
