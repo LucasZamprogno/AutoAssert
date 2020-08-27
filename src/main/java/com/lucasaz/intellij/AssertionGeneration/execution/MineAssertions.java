@@ -6,10 +6,12 @@ import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
 import com.lucasaz.intellij.AssertionGeneration.model.AssertionGenerationResponse;
 import com.lucasaz.intellij.AssertionGeneration.model.DynamicAnalysisResult;
 import com.lucasaz.intellij.AssertionGeneration.model.assertion.*;
+import com.lucasaz.intellij.AssertionGeneration.model.task.Dredd;
 import com.lucasaz.intellij.AssertionGeneration.model.task.Nock;
 import com.lucasaz.intellij.AssertionGeneration.model.task.Typeset;
 import com.lucasaz.intellij.AssertionGeneration.model.task.Task;
 import com.lucasaz.intellij.AssertionGeneration.services.IsolatedAssertionGeneration;
+import com.lucasaz.intellij.AssertionGeneration.util.Util;
 import com.lucasaz.intellij.AssertionGeneration.visitors.ProjectVisitor;
 import com.lucasaz.intellij.AssertionGeneration.visitors.impl.TypeScriptVisitor;
 import org.apache.commons.io.FileUtils;
@@ -38,6 +40,7 @@ public class MineAssertions {
 	static long expectedValueIsIdentifier = 0;
 	static long expectedValueIsLiteral = 0;
 	static long expectedValueIsCall = 0;
+	static long generateCounter = 0;
 	static List<Integer> propertyAccessDepths = new ArrayList<>();
 	static List<Integer> testAssertionCounts = new ArrayList<>();
 	static List<Integer> expectKeywordCounts = new ArrayList<>();
@@ -384,32 +387,47 @@ public class MineAssertions {
 								} else {
 									root = assertingOn.getText();
 								}
-								String testFileRelativePath = filePath.toString().replace(repo.toString() + "/tests/", "");
 								Task task;
+								String testFileRelativePath;
+								String fileName = new File(filePath.toString()).getName();
 								if (repo.toString().contains("nock")) {
-									task = new Nock("tests", testFileRelativePath);
+									testFileRelativePath = filePath.toString().replace(repo.toString() + "/tests/", "");
+									task = new Nock("tests", fileName);
 								} else if (repo.toString().contains("Typeset")) {
-									task = new Typeset("test", testFileRelativePath);
+									testFileRelativePath = filePath.toString().replace(repo.toString() + "/test/", "");
+									task = new Typeset("test", fileName);
+								} else if (repo.toString().contains("dredd")){
+									if (fileName.endsWith(".ts")) {
+										continue; // fml
+									}
+									testFileRelativePath = filePath.toString().replace(repo.toString() + "/packages/dredd-transactions/test/unit", "");
+									task = new Dredd("packages/dredd-transactions/test/unit", fileName);
 								} else {
 									return;
 								}
 								String newAssertions;
 								boolean error = false;
 								boolean differentBetweenRuns = false;
+								String errorMessage;
 								try {
+									generateCounter++;
 									AssertionGenerationResponse response = IsolatedAssertionGeneration.generateAssertions(line, root, source, task);
 									newAssertions = response.getGeneratedAssertions();
 									differentBetweenRuns = response.isDifferentBetweenRuns();
+									error = response.isFailed();
+									errorMessage = response.getReason();
 								} catch (PluginException pluginException) {
 									newAssertions = "";
 									error = true;
+									errorMessage = pluginException.getMessage();
 								}
 								DynamicAnalysisResult result = new DynamicAnalysisResult(
 										block,
 										testFileRelativePath,
 										differentBetweenRuns,
 										error,
-										newAssertions
+										newAssertions,
+										errorMessage
 								);
 								saveResultToFile(repo.toString(), result);
 							}
@@ -484,15 +502,16 @@ public class MineAssertions {
 	}
 
 	private static void saveResultToFile(String repo, DynamicAnalysisResult result) {
-		String fileName = "./save/dynamic/" + repo + result.getSourceFilePath() + expectCount;
+		String fileName = "./save/dynamic/" + repo + "-" + result.getSourceFilePath() + "-" + generateCounter;
 		try {
 			File file = new File(fileName);
+			Util.ensureDir(file.getParent());
 			file.createNewFile();
 			PrintWriter printWriter = new PrintWriter(fileName);
 			printWriter.print(result.toString());
 			printWriter.close();
 		} catch (Exception exception) {
-			// Whatever forget it
+			System.err.println("a");
 		}
 	}
 
@@ -642,7 +661,7 @@ public class MineAssertions {
 		return Arrays.asList(
 //				"https://github.com/npm/npm",
 //				"https://github.com/palantir/blueprint",
-				"https://github.com/nock/nock",
+//				"https://github.com/nock/nock",
 //				"https://github.com/ConsenSys/truffle",
 //				"https://github.com/DevExpress/testcafe", // Causes a crash?
 //				"https://github.com/sahat/satellizer",
@@ -650,10 +669,10 @@ public class MineAssertions {
 //				"https://github.com/vigetlabs/gulp-starter",
 //				"https://github.com/ipfs/js-ipfs",
 //				"https://github.com/theintern/intern",
-//				"https://github.com/apiaryio/dredd",
+				"https://github.com/apiaryio/dredd" //,
 //				"https://github.com/bitpay/copay",
 //				"https://github.com/huytd/agar.io-clone",
-				"https://github.com/davidmerfield/Typeset" //,
+//				"https://github.com/davidmerfield/Typeset" //,
 //				"https://github.com/electrode-io/electrode",
 //				"https://github.com/alibaba/uirecorder",
 //				"https://github.com/carteb/carte-blanche",

@@ -21,7 +21,7 @@ public class Util {
 
     public static final String volumeDir = "volumes";
     public static final String logDir = "logs";
-    public static final String projectDir = "C:/Users/Braxton/Desktop/AssertionGeneration-Plugin/";
+    public static final String projectDir = "/home/lucas/Documents/AssertionGeneration-Plugin/";
     public static final String dev = Util.projectDir;
     public static final String prod = "/var/opt/classy/assertiongeneration/";
     public static final String hostFSDir = Util.dev;

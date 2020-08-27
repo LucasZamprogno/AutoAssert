@@ -10,6 +10,9 @@ const runCommand = "npm run test:mocha";
 console.log("Removing testOutput");
 removeFile(outputPath);
 
+console.log("Removing test_back_filters.js");
+removeFile(`${projectDir}/tests/test_back_filters.js`);
+
 console.log("Before run 1");
 let result1 = runAndLoad(projectDir, runCommand);
 
@@ -37,12 +40,13 @@ function runAndLoad(dir, cmd) {
         execSync(`cd ${dir} && ${cmd}`, {timeout: 10 * 1000});
         return loadOutput();
     } catch (e) {
+        console.log(e.message);
         fs.writeFileSync(outputPath, JSON.stringify({type: "fail",
-            reason:"timeout probably",
+            reason: e.message,
             value: null,
             hasDiff: false
         }));
-        throw "Rnu failed, ending container";
+        throw "Run failed, ending container";
     }
 }
 

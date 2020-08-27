@@ -2,8 +2,8 @@ const fs = require("fs");
 // const _ = require("lodash");
 const execSync = require("child_process").execSync;
 
-const projectDir = "../main";
-const outputPath = `${projectDir}/test/.testOutput`;
+const projectDir = "../main/packages/dredd-transactions";
+const outputPath = `${projectDir}/packages/dredd-transactions/test/unit/`; // TODO fix with param
 const runCommand = "npm run test"; 
 // Import these somehow?
 
