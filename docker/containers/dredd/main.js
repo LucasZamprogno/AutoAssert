@@ -3,7 +3,7 @@ const fs = require("fs");
 const execSync = require("child_process").execSync;
 
 const projectDir = "../main/packages/dredd-transactions";
-const outputPath = `${projectDir}/packages/dredd-transactions/test/unit/`; // TODO fix with param
+const outputPath = `${projectDir}/test/unit/.testOutput`; // TODO fix with param
 const runCommand = "npm run test"; 
 // Import these somehow?
 
@@ -38,7 +38,11 @@ function runAndLoad(dir, cmd) {
         return loadOutput();
     } catch (e) {
         console.log(e.message);
-        fs.writeFileSync(outputPath, JSON.stringify({type: "fail", reason:"timeout probably"}));
+        fs.writeFileSync(outputPath, JSON.stringify({type: "fail",
+            reason: e.message,
+            value: null,
+            hasDiff: false
+        }));
         throw "Run failed, ending container";
     }
 }

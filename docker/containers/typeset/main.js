@@ -38,7 +38,11 @@ function runAndLoad(dir, cmd) {
         return loadOutput();
     } catch (e) {
         console.log(e.message);
-        fs.writeFileSync(outputPath, JSON.stringify({type: "fail", reason:"timeout probably"}));
+        fs.writeFileSync(outputPath, JSON.stringify({type: "fail",
+            reason: e.message,
+            value: null,
+            hasDiff: false
+        }));
         throw "Run failed, ending container";
     }
 }

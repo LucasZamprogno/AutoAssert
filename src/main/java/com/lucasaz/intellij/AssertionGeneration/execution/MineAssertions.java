@@ -27,7 +27,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class MineAssertions {
-	static boolean DYNAMIC_RUN = false;
+	static boolean DYNAMIC_RUN = true;
 
 	static long orphanAssertions = 0;
 	static long numberOfProjects = 0;
