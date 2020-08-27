@@ -27,7 +27,8 @@ public class DynamicAnalysisResult extends AssertionGenerationResponse {
 
     public String toString() {
         String str = "Theirs: \n" + associatedBlock.toString() + "\n\n" +
-                "Ours: \n" + this.generatedAssertions + "\n\n" + "Error: " + this.error;
+                "Ours: \n" + this.generatedAssertions + "\n\n" + "Error: " + this.error + "\n\n" +
+                "Different between runs:" + this.differentBetweenRuns;
         if (this.failed) {
             str = str + "\n\n" + "Fail reason: " + this.reason;
         }
