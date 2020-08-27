@@ -45,11 +45,21 @@ public class IsolatedAssertionGeneration {
             JSONObject resObj = new JSONObject(result);
             String assertions = IsolatedAssertionGeneration.scuffedGenAssertions(resObj, selected, whitespace);
             task.removeVolume(id);
-            return new AssertionGenerationResponse(assertions, resObj.getBoolean("hasDiff"));
+            // Probably a better way to do this but that's for a time when we have time
+            String val;
+            boolean failState;
+            if (resObj.getString("type") == "fail") {
+                failState = true;
+                val = resObj.getString("reason");
+            } else {
+                failState = false;
+                val = "No failure";
+            }
+            return new AssertionGenerationResponse(assertions, resObj.getBoolean("hasDiff"), failState, val);
         } catch (PluginException | IOException | JSONException e) {
             System.out.println(e.getMessage());
             task.removeVolume(id);
-            return new AssertionGenerationResponse(IsolatedAssertionGeneration.makeFailCaseResponse(testFile, lineNum), false);
+            return new AssertionGenerationResponse(IsolatedAssertionGeneration.makeFailCaseResponse(testFile, lineNum), false, true, e.getMessage());
         }
     }
 

@@ -8,4 +8,6 @@ import lombok.Getter;
 public class AssertionGenerationResponse {
     String generatedAssertions;
     boolean differentBetweenRuns;
+    boolean failed;
+    String reason;
 }
