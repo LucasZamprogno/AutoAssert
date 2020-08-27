@@ -23,7 +23,12 @@ public class Docker {
             String volumeTest = (hostTestDir + ":" + containerTestDir).replaceAll("\\\\", "/"); // TODO make this better
             DockerClient docker = DefaultDockerClient.fromEnv().build();
             HostConfig hc = HostConfig.builder().appendBinds(volumeTest).build();
-            ContainerConfig cc = ContainerConfig.builder().image(task.image).hostConfig(hc).build();
+            ContainerConfig cc = ContainerConfig
+                    .builder()
+                    .image(task.image)
+                    .hostConfig(hc)
+                    .env("TEST_DIR=" + task.testDir)
+                    .build();
             ContainerCreation container = docker.createContainer(cc);
             String containerId = container.id();
             System.out.println("Starting container");

@@ -1,6 +1,9 @@
+const dotenv = require('dotenv');
 const fs = require("fs");
 // const _ = require("lodash");
 const execSync = require("child_process").execSync;
+
+const testDir = process.env.TEST_DIR;
 
 const projectDir = "../main/packages/dredd-transactions";
 const outputPath = `${projectDir}/test/unit/.testOutput`; // TODO fix with param

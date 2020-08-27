@@ -438,19 +438,23 @@ public class MineAssertions {
 								}
 								Task task;
 								String testFileRelativePath;
-								String fileName = new File(filePath.toString()).getName();
+								File file = new File(filePath.toString());
+								String fileName = file.getName();
+
+								String testDirPath = "." + file.getParent().replace(repo.toString(), "");
+
 								if (repo.toString().contains("nock")) {
 									testFileRelativePath = filePath.toString().replace(repo.toString() + "/tests/", "");
-									task = new Nock("tests", fileName);
+									task = new Nock(testDirPath, fileName);
 								} else if (repo.toString().contains("Typeset")) {
 									testFileRelativePath = filePath.toString().replace(repo.toString() + "/test/", "");
-									task = new Typeset("test", fileName);
+									task = new Typeset(testDirPath, fileName);
 								} else if (repo.toString().contains("dredd")){
 									if (fileName.endsWith(".ts")) {
 										continue; // fml
 									}
 									testFileRelativePath = filePath.toString().replace(repo.toString() + "/packages/dredd-transactions/test/unit", "");
-									task = new Dredd("packages/dredd-transactions/test/unit", fileName);
+									task = new Dredd(testDirPath, fileName);
 								} else {
 									return;
 								}
