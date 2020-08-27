@@ -5,7 +5,7 @@ const execSync = require("child_process").execSync;
 
 const testDir = process.env.TEST_DIR;
 console.log(testDir);
-let split = testDir.split("/");
+let split = cursedSplit(testDir);
 let firstPart = split.slice(1, 3).join("/");
 let secondPart = split.slice(3).join("/");
 console.log(firstPart);
@@ -65,6 +65,14 @@ function bothObjects(res1, res2) {
 
 function bothArrOrSet(res1, res2) {
     return res1.type === res2.type && (res1.type === 'array' || res2.type === 'set');
+}
+
+function cursedSplit(str) {
+    if (str.includes("/")) {
+        return str.split("/");
+    } else {
+        return str.split("\\");
+    }
 }
 
 function removeFile(fileName) {
