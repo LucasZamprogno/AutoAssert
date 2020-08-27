@@ -25,9 +25,6 @@ public class EqualitySpecifier {
     );
 
     public static boolean isInEqualityCategory(Assertion assertion) {
-        if (assertion.toString().startsWith("assert")) {
-            return false;
-        }
         for (PropertyAccess propertyAccess : assertion.getPropertyAccesses()) {
             String keyword = propertyAccess.getText();
             if (equalityKeywords.contains(keyword)) {
@@ -161,7 +158,7 @@ public class EqualitySpecifier {
     private static boolean checkLHSForArgumentsWhere(Assertion assertion, Map<Target, V8Object> mapToV8Nodes, PoorMansFirstOrderFunction function) {
         boolean lhsHasCallWithKeywords = false;
         if (assertion.isExpectingValue()) {
-            Target lhsArgument = assertion.getExpectingOn();
+            Target lhsArgument = assertion.getLHS();
             V8Object lhsV8Argument = mapToV8Nodes.get(lhsArgument);
             lhsHasCallWithKeywords = function.call(lhsV8Argument);
         }
@@ -169,16 +166,11 @@ public class EqualitySpecifier {
     }
 
     private static boolean checkRHSForArgumentsWhere(Assertion assertion, Map<Target, V8Object> mapToV8Nodes, PoorMansFirstOrderFunction function) {
-        for (int i = 1; i < assertion.getPropertyAccesses().size(); i = i + 1) {
-            PropertyAccess propertyAccess = assertion.getPropertyAccesses().get(i);
-            if (propertyAccess instanceof Call) {
-                Call call = (Call) propertyAccess;
-                for (Target argument : call.getArguments()) {
-                    V8Object rhsV8Argument = mapToV8Nodes.get(argument);
-                    if (function.call(rhsV8Argument)) {
-                        return true;
-                    }
-                }
+        List<Target> targets = assertion.getRHS();
+        for (Target argument : targets) {
+            V8Object rhsV8Argument = mapToV8Nodes.get(argument);
+            if (function.call(rhsV8Argument)) {
+                return true;
             }
         }
         return false;
@@ -358,7 +350,7 @@ public class EqualitySpecifier {
         equalityAssertion.setEqTypeof(isEqualityTypeof(assertion, mapToV8Nodes));
         // Instanceof
         equalityAssertion.setEqInstanceOf(isEqualityInstanceOf(assertion, mapToV8Nodes));
-        // TODO rename numeric
+        // Numeric
         equalityAssertion.setEqNumeric(isEqualityNumeric(assertion, mapToV8Nodes));
         // truthiness
         equalityAssertion.setEqTruthiness(isEqualityTruthiness(assertion, mapToV8Nodes));

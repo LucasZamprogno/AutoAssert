@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -14,7 +15,7 @@ public class Assertion {
 	String filePath;
 	int line;
 
-	public Target getExpectingOn() {
+	public Target getLHS() {
 		PropertyAccess propertyAccess = this.getPropertyAccesses().get(0);
 		if (propertyAccess.getText().equals("expect") && propertyAccess instanceof Call) {
 			Call call = (Call) propertyAccess;
@@ -29,6 +30,28 @@ public class Assertion {
 			}
 		}
 		return null;
+	}
+
+	public List<Target> getRHS() {
+		PropertyAccess propertyAccess = this.getPropertyAccesses().get(0);
+		List<Target> targets = new ArrayList<>();
+		if (propertyAccess.getText().equals("expect")) {
+			for (int i = 1; i < getPropertyAccesses().size(); i = i + 1) {
+				PropertyAccess rhsPropertyAccess = getPropertyAccesses().get(i);
+				if (rhsPropertyAccess instanceof Call) {
+					Call call = (Call) propertyAccess;
+					targets.addAll(call.getArguments());
+				}
+			}
+		} else if (propertyAccess.getText().equals("assert")) {
+			if (getPropertyAccesses().size() > 0 && getPropertyAccesses().get(1) instanceof Call) {
+				Call call = (Call) getPropertyAccesses().get(1);
+				for (int i = 1; i < call.getArguments().size(); i = i + 1) {
+					targets.add(call.getArguments().get(i));
+				}
+			}
+		}
+		return targets;
 	}
 
 	public boolean isExpectingValue() {

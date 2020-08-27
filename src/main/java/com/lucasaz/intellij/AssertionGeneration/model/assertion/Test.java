@@ -28,12 +28,12 @@ public class Test {
             if (currentAssertion.isExpectingValue()) {
                 List<Assertion> block = new ArrayList<>();
                 block.add(currentAssertion);
-                Target expectingOn = currentAssertion.getExpectingOn();
+                Target expectingOn = currentAssertion.getLHS();
                 if (!expectingOn.isExpression() && !expectingOn.isLiteral() && !expectingOn.isIncludesCallExpression()) {
                     while(i < assertions.size() &&
                             consecutiveLines(assertions.get(i - 1), assertions.get(i)) &&
                             assertions.get(i).isExpectingValue() &&
-                            sameRootIdentifier(expectingOn, assertions.get(i).getExpectingOn())) {
+                            sameRootIdentifier(expectingOn, assertions.get(i).getLHS())) {
                         block.add(assertions.get(i));
                         i = i + 1;
                     }
@@ -41,7 +41,7 @@ public class Test {
                     while(i < assertions.size() &&
                             consecutiveLines(assertions.get(i - 1), assertions.get(i)) &&
                             assertions.get(i).isExpectingValue() &&
-                            sameText(expectingOn, assertions.get(i).getExpectingOn())) {
+                            sameText(expectingOn, assertions.get(i).getLHS())) {
                         block.add(assertions.get(i));
                         i = i + 1;
                     }
