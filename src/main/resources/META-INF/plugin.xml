@@ -17,13 +17,13 @@
   <idea-version since-build="193.0"/>
 
   <extensions defaultExtensionNs="com.intellij">
-    <stepsBeforeRunProvider implementation="com.lucasaz.intellij.AssertionGeneration.AssertionGenerationBeforeRunTaskProvider"/>
-    <projectConfigurable instance="com.lucasaz.intellij.AssertionGeneration.AssertionGenerationSettingsConfigurable" id="test.settings"/>
+    <stepsBeforeRunProvider implementation="com.lucasaz.intellij.AssertionGeneration.execution.AssertionGenerationBeforeRunTaskProvider"/>
+    <projectConfigurable instance="com.lucasaz.intellij.AssertionGeneration.indices.AssertionGenerationSettingsConfigurable" id="test.settings"/>
   </extensions>
 
   <actions>
     <action id="TypeScript.Assertion.Generation"
-            class="com.lucasaz.intellij.AssertionGeneration.AssertionGeneration"
+            class="com.lucasaz.intellij.AssertionGeneration.execution.AssertionGeneration"
             text="Generate Assertions"
             description="Generate assertions">
       <add-to-group group-id="EditorPopupMenu" anchor="last"/>
