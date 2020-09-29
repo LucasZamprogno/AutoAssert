@@ -7,7 +7,7 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 
-public abstract class Task {
+public class Task {
 
 
     public final String taskName; // mock
@@ -18,11 +18,11 @@ public abstract class Task {
     public final String logFileInRepo; // test/.testOutput;
     public final String testFilePath; // = test/Main.spec.ts;
 
-    protected Task(String task, String testDir, String testFile, String image) {
+    public Task(String task, String testDir, String testFile) {
         this.taskName = task;
         this.testDir = testDir;
         this.testFile = testFile;
-        this.image = image;
+        this.image = "assertion-" + task.toLowerCase() + "-runner";
         this.logFileInRepo = Util.joinStringPaths(testDir, this.logFile);
         this.testFilePath =  Util.joinStringPaths(testDir, testFile);
     }
