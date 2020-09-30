@@ -442,7 +442,7 @@ public class MineAssertions {
 								String testDirPath = "." + file.getParent().replace(repo.toString(), "");
 								String testFileRelativePath = testDirPath.replace("./temp/", "");
 								String repoName = repo.toString().replace("./temp/", "");
-								Task task = new Task(repoName, testDirPath, fileName);
+								Task task = new Task(repoName, testDirPath.replace(".", ""), fileName);
 								String newAssertions;
 								boolean error;
 								boolean differentBetweenRuns = false;
