@@ -117,7 +117,7 @@ public class IsolatedAssertionGeneration {
                 break;
             case "function":
                 toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.ba.a(resType);").append(lsp);
+                toReturn.append(ws).append("expect(varName).to.be.a(resType);").append(lsp);
                 break;
             case "null":
                 toReturn.append(ws).append("expect(varName).to.be.null;").append(lsp);
