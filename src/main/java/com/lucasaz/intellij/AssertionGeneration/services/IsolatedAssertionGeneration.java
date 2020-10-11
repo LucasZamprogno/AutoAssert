@@ -118,6 +118,15 @@ public class IsolatedAssertionGeneration {
             case "function":
                 toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
                 toReturn.append(ws).append("expect(varName).to.be.a(resType);").append(lsp);
+                int numArgs = (int) observed.get("args");
+                if (numArgs == 0) {
+                    boolean throwsBool = (boolean) observed.get("throws");
+                    if (throwsBool) {
+                        toReturn.append(ws).append("expect(varName).to.throw;").append(lsp);
+                    } else {
+                        toReturn.append(ws).append("expect(varName).to.not.throw;").append(lsp);
+                    }
+                }
                 break;
             case "null":
                 toReturn.append(ws).append("expect(varName).to.be.null;").append(lsp);
