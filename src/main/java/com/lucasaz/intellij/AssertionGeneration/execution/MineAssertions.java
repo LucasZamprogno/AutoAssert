@@ -436,28 +436,13 @@ public class MineAssertions {
 								} else {
 									root = assertingOn.getText();
 								}
-								Task task;
-								String testFileRelativePath;
 								File file = new File(filePath.toString());
 								String fileName = file.getName();
 
 								String testDirPath = "." + file.getParent().replace(repo.toString(), "");
-
-								if (repo.toString().contains("nock")) {
-									testFileRelativePath = filePath.toString().replace(repo.toString() + "/tests/", "");
-									task = new Nock(testDirPath, fileName);
-								} else if (repo.toString().contains("Typeset")) {
-									testFileRelativePath = filePath.toString().replace(repo.toString() + "/test/", "");
-									task = new Typeset(testDirPath, fileName);
-								} else if (repo.toString().contains("dredd")){
-									if (fileName.endsWith(".ts")) {
-										continue; // fml
-									}
-									testFileRelativePath = filePath.toString().replace(repo.toString() + "/packages/dredd-transactions/test/unit", "");
-									task = new Dredd(testDirPath, fileName);
-								} else {
-									return;
-								}
+								String testFileRelativePath = testDirPath.replace("./temp/", "");
+								String repoName = repo.toString().replace("./temp/", "");
+								Task task = new Task(repoName, testDirPath.replace(".", ""), fileName);
 								String newAssertions;
 								boolean error;
 								boolean differentBetweenRuns = false;
@@ -748,7 +733,7 @@ public class MineAssertions {
 		return Arrays.asList(
 //				"https://github.com/npm/npm",
 //				"https://github.com/palantir/blueprint",
-				"https://github.com/nock/nock"//,
+//				"https://github.com/nock/nock"//,
 //				"https://github.com/ConsenSys/truffle",
 ////				"https://github.com/DevExpress/testcafe", // Causes a crash?
 //				"https://github.com/sahat/satellizer",
@@ -759,7 +744,7 @@ public class MineAssertions {
 //				"https://github.com/apiaryio/dredd" //,
 //				"https://github.com/bitpay/copay",
 //				"https://github.com/huytd/agar.io-clone",
-//				"https://github.com/davidmerfield/Typeset",
+				"https://github.com/davidmerfield/Typeset" //,
 //				"https://github.com/electrode-io/electrode",
 //				"https://github.com/alibaba/uirecorder",
 //				"https://github.com/carteb/carte-blanche",

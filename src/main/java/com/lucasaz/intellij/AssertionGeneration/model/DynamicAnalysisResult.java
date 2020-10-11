@@ -4,6 +4,7 @@ import com.lucasaz.intellij.AssertionGeneration.model.assertion.Assertion;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -26,12 +27,14 @@ public class DynamicAnalysisResult extends AssertionGenerationResponse {
     }
 
     public String toString() {
-        String str = "Theirs: \n" + associatedBlock.toString() + "\n\n" +
-                "Ours: \n" + this.generatedAssertions + "\n\n" + "Error: " + this.error + "\n\n" +
-                "Different between runs:" + this.differentBetweenRuns;
+        JSONObject json = new JSONObject();
+        json.put("theirs", associatedBlock.toString());
+        json.put("ours", this.generatedAssertions);
+        json.put("error", this.error);
+        json.put("diff", this.differentBetweenRuns);
         if (this.failed) {
-            str = str + "\n\n" + "Fail reason: " + this.reason;
+            json.put("failed", this.reason);
         }
-        return str;
+        return json.toString();
     }
 }
