@@ -15,6 +15,17 @@ function elemUnderTestGenerator(elem: any) {
             res["value"] = null; // Arbitrary choice
             break;
         case "function":
+            let numArgs = elem.length;
+            res["args"] = numArgs;
+            if (numArgs === 0) { // Can't guess at args, check for throws only if none needed
+                let throws = false;
+                try {
+                    elem();
+                } catch (e) {
+                    throws = true;
+                }
+                res["throws"] = throws;
+            }
             res["value"] = elem.toString(); // Function as text, why not
             break;
         case "object":
