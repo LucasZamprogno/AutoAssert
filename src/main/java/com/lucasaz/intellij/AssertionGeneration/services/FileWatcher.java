@@ -139,6 +139,15 @@ public class FileWatcher extends Thread implements Runnable {
             case "function":
                 toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
                 toReturn.append(ws).append("expect(varName).to.ba.a(resType);").append(lsp);
+                int numArgs = (int) observed.get("numArgs");
+                if (numArgs == 0) {
+                    boolean throwsBool = (boolean) observed.get("throws");
+                    if (throwsBool) {
+                        toReturn.append(ws).append("expect(varName).to.throw;").append(lsp);
+                    } else {
+                        toReturn.append(ws).append("expect(varName).to.not.throw;").append(lsp);
+                    }
+                }
                 break;
             case "null":
                 toReturn.append(ws).append("expect(varName).to.be.null;").append(lsp);
