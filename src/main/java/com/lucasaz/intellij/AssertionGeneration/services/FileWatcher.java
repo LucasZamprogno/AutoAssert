@@ -115,6 +115,7 @@ public class FileWatcher extends Thread implements Runnable {
         String type = (String) observed.get("type");
         String lsp = System.getProperty("line.separator");
         String val;
+        int len;
         StringBuilder toReturn = new StringBuilder();
         switch (type) {
             case "boolean":
@@ -158,15 +159,19 @@ public class FileWatcher extends Thread implements Runnable {
             case "array":
                 JSONArray arr = (JSONArray) observed.get("value");
                 val = arr.toString();
+                len = (int) observed.get("length");
                 toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
                 toReturn.append(ws).append("expect(varName).to.be.a(resType);").append(lsp);
+                toReturn.append(ws).append("expect(varName).to.have.length(").append(len).append(");").append(lsp);
                 toReturn.append(ws).append("expect(varName).to.deep.equal(").append(val).append(");").append(lsp);
                 break;
             case "set":
                 JSONArray setArr = (JSONArray) observed.get("value");
                 val = setArr.toString();
+                len = (int) observed.get("length");
                 toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
                 toReturn.append(ws).append("expect(varName).to.be.a(\"Set\");").append(lsp); // hardcoding set for caps
+                toReturn.append(ws).append("expect(varName).to.have.length(").append(len).append(");").append(lsp);
                 toReturn.append(ws).append("expect(Array.from(varName)).to.deep.equal(").append(val).append(");").append(lsp); // No idea if this works
                 break;
             case "promise":
