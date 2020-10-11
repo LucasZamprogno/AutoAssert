@@ -1,0 +1,53 @@
+{
+  "name": "typeset",
+  "version": "0.3.0",
+  "description": "Typesetting for the web",
+  "keywords": [
+    "typeset",
+    "typography",
+    "hyphenation",
+    "ligatures",
+    "optical mar­gin align­ment",
+    "small caps"
+  ],
+  "homepage": "https://github.com/davidmerfield/Typeset.js",
+  "bugs": {
+    "url": "https://github.com/davidmerfield/Typeset.js/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/davidmerfield/Typeset.js.git"
+  },
+  "license": "MIT",
+  "author": "David Merfield",
+  "contributors": [
+    "Daniel Haim <daniel@rgbyk.com> (https://danielhaim.com)"
+  ],
+  "main": "src/index.js",
+  "bin": {
+    "typeset-js": "src/cmd.js"
+  },
+  "scripts": {
+    "build": "npm run clean && npm run build-dev && npm run build-prod",
+    "build-dev": "./node_modules/webpack/bin/webpack.js",
+    "build-prod": "PROD=1 ./node_modules/webpack/bin/webpack.js",
+    "clean": "rm -rf build/",
+    "jshint": "jshint ./src",
+    "test": "mocha -u bdd -R spec -t 500 --recursive",
+    "watch": "mocha test -u bdd -R spec -t 500 --recursive --watch || true"
+  },
+  "dependencies": {
+    "commander": "^3.0.2",
+    "html-entities": "^1.3.1",
+    "html-minifier": "^4.0.0",
+    "hypher": "^0.2.5",
+    "cheerio": "^0.22.0",
+    "chai": "^4.2.0",
+    "jshint": "^2.11.1",
+    "mocha": "^7.1.2",
+    "terser-webpack-plugin": "^3.0.6",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12",
+    "minimist": ">=1.2.2"
+  }
+}

@@ -1,0 +1,14 @@
+FROM node:12-alpine
+
+COPY ./containers/nock /app/main-runner
+COPY ./repos/nock /app/main
+
+WORKDIR /app/main
+
+RUN npm install
+
+WORKDIR /app/main-runner
+
+RUN npm install
+
+CMD node ./main.js

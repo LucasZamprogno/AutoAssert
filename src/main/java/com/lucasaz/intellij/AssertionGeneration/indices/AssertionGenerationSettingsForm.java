@@ -1,4 +1,4 @@
-package com.lucasaz.intellij.AssertionGeneration;
+package com.lucasaz.intellij.AssertionGeneration.indices;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;

@@ -35,8 +35,16 @@ describe("Main Test Suite", function () {
         const res = Main.returnSymbol();
     });
 
-    it("Function", function () {
-        const res = Main.returnFunction();
+    it("Function throw", function () {
+        const res = Main.returnFunctionNoArgsThrow();
+    });
+
+    it("Function no throw", function () {
+        const res = Main.returnFunctionNoArgsNoThrow();
+    });
+
+    it("Function not callable", function () {
+        const res = Main.returnFunctionArgs();
     });
 
     it("Array", function () {

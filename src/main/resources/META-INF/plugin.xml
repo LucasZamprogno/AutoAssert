@@ -28,6 +28,12 @@
             description="Generate assertions">
       <add-to-group group-id="EditorPopupMenu" anchor="last"/>
     </action>
+    <action id="TypeScript.Project.Visitor"
+            class="com.lucasaz.intellij.AssertionGeneration.execution.VisitProject"
+            text="Visit Project"
+            description="Visit project">
+      <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+    </action>
   </actions>
 
 </idea-plugin>
