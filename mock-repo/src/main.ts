@@ -17,13 +17,25 @@ export class Main {
 	public static returnSymbol(): symbol {
 		return this.someSymbol;
 	}
-	
-	public static returnFunction(): () => void {
-		return function() {
+
+	public static returnFunctionArgs(): (a,b) => void {
+		return function(a, b) {
 			console.log("foo");
 		}
 	}
 	
+	public static returnFunctionNoArgsNoThrow(): () => void {
+		return function() {
+			console.log("foo");
+		}
+	}
+
+	public static returnFunctionNoArgsThrow(): () => void {
+		return function() {
+			throw new Error();
+		}
+	}
+
 	public static returnArray(): any[] {
 		return ["foo", null, 1];
 	}
