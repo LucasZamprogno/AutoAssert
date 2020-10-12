@@ -19,21 +19,21 @@ public class AssertionSelector {
             case "boolean":
             case "number":
                 val = observed.get("value").toString();
-                assertions.add(IsomorphismSelector.getAssertion(AssertKind.EXIST, name, null));
+                assertions.add(IsomorphismSelector.getAssertion(AssertKind.EXIST, name, val));
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.EQUAL, name, val));
                 break;
             case "string": // Only diff is the quotes in the deep equal
                 val = (String) observed.get("value");
                 val = "\"" + val + "\"";
-                assertions.add(IsomorphismSelector.getAssertion(AssertKind.EXIST, name, null));
+                assertions.add(IsomorphismSelector.getAssertion(AssertKind.EXIST, name, val));
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.EQUAL, name, val));
                 break;
             case "symbol":
                 val = (String) observed.get("value");
                 val = "\"" + val + "\"";
-                assertions.add(IsomorphismSelector.getAssertion(AssertKind.EXIST, name, null));
+                assertions.add(IsomorphismSelector.getAssertion(AssertKind.EXIST, name, val));
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.EQUAL, name + ".toString()", val));
                 break;
@@ -60,7 +60,7 @@ public class AssertionSelector {
                 JSONArray arr = (JSONArray) observed.get("value");
                 val = arr.toString();
                 len = (int) observed.get("length");
-                assertions.add(IsomorphismSelector.getAssertion(AssertKind.EXIST, name, null));
+                assertions.add(IsomorphismSelector.getAssertion(AssertKind.EXIST, name, val));
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.LENGTH, name, String.valueOf(len)));
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.DEEP_EQUAL, name, val));
@@ -69,7 +69,7 @@ public class AssertionSelector {
                 JSONArray setArr = (JSONArray) observed.get("value");
                 val = setArr.toString();
                 len = (int) observed.get("length");
-                assertions.add(IsomorphismSelector.getAssertion(AssertKind.EXIST, name, null));
+                assertions.add(IsomorphismSelector.getAssertion(AssertKind.EXIST, name, val));
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.TYPE, name, "\"Set\"")); // hardcoding set for caps
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.LENGTH, name, String.valueOf(len)));
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.DEEP_EQUAL, name, val));
@@ -85,7 +85,7 @@ public class AssertionSelector {
             case "object":
                 JSONObject subObj = (JSONObject) observed.get("value");
                 val = subObj.toString();
-                assertions.add(IsomorphismSelector.getAssertion(AssertKind.EXIST, name, null));
+                assertions.add(IsomorphismSelector.getAssertion(AssertKind.EXIST, name, val));
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.DEEP_EQUAL, name, val));
                 break;
