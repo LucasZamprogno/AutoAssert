@@ -3,10 +3,10 @@ package com.lucasaz.intellij.AssertionGeneration.services;
 import com.intellij.openapi.application.NonBlockingReadAction;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.util.concurrency.NonUrgentExecutor;
+import com.lucasaz.intellij.AssertionGeneration.assertions.AssertionSelector;
 import com.lucasaz.intellij.AssertionGeneration.util.Util;
 import com.lucasaz.intellij.AssertionGeneration.dto.Selected;
 import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.FileWriter;
@@ -105,99 +105,9 @@ public class FileWatcher extends Thread implements Runnable {
     }
 
     private String makeFinalFile(JSONObject observed) throws PluginException {
-        String assertions = this.scuffedGenAssertions(observed);
+        String varName = this.selected.getSelected();
+        String whitespace = this.selected.getWhitespace();
+        String assertions = AssertionSelector.getAllAssertions(observed, varName, whitespace);
         return Util.spliceInto(this.selected.getOriginalFile(), assertions, this.selected.getLine());
-    }
-
-    private String scuffedGenAssertions(JSONObject observed) {
-        String name = this.selected.getSelected();
-        String ws = this.selected.getWhitespace();
-        String type = (String) observed.get("type");
-        String lsp = System.getProperty("line.separator");
-        String val;
-        int len;
-        StringBuilder toReturn = new StringBuilder();
-        switch (type) {
-            case "boolean":
-            case "number":
-                val = observed.get("value").toString();
-                toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.be.a(resType);").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.equal(").append(val).append(");").append(lsp);
-                break;
-            case "string": // Only diff is the quotes in the deep equal
-                val = (String) observed.get("value");
-                toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.be.a(resType);").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.equal(\"").append(val).append("\");").append(lsp);
-                break;
-            case "symbol":
-                val = (String) observed.get("value");
-                toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.be.a(resType);").append(lsp);
-                toReturn.append(ws).append("expect(varName.toString()).to.equal(\"").append(val).append("\");").append(lsp);
-                break;
-            case "function":
-                toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.be.a(resType);").append(lsp);
-                int numArgs = (int) observed.get("args");
-                if (numArgs == 0) {
-                    boolean throwsBool = (boolean) observed.get("throws");
-                    if (throwsBool) {
-                        toReturn.append(ws).append("expect(varName).to.throw;").append(lsp);
-                    } else {
-                        toReturn.append(ws).append("expect(varName).to.not.throw;").append(lsp);
-                    }
-                }
-                break;
-            case "null":
-                toReturn.append(ws).append("expect(varName).to.be.null;").append(lsp);
-                break;
-            case "undefined":
-                toReturn.append(ws).append("expect(varName).to.be.undefined;").append(lsp);
-                break;
-            case "array":
-                JSONArray arr = (JSONArray) observed.get("value");
-                val = arr.toString();
-                len = (int) observed.get("length");
-                toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.be.a(resType);").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.have.length(").append(len).append(");").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.deep.equal(").append(val).append(");").append(lsp);
-                break;
-            case "set":
-                JSONArray setArr = (JSONArray) observed.get("value");
-                val = setArr.toString();
-                len = (int) observed.get("length");
-                toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.be.a(\"Set\");").append(lsp); // hardcoding set for caps
-                toReturn.append(ws).append("expect(varName).to.have.length(").append(len).append(");").append(lsp);
-                toReturn.append(ws).append("expect(Array.from(varName)).to.deep.equal(").append(val).append(");").append(lsp); // No idea if this works
-                break;
-            case "promise":
-                toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.be.a(\"promise\");").append(lsp);
-                break;
-            case "error":
-                toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.be.a(\"error\");").append(lsp);
-                break;
-            case "object":
-                JSONObject subObj = (JSONObject) observed.get("value");
-                val = subObj.toString();
-                toReturn.append(ws).append("expect(varName).to.exist;").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.be.a(resType);").append(lsp);
-                toReturn.append(ws).append("expect(varName).to.deep.equal(").append(val).append(");").append(lsp);
-                break;
-            case "fail":
-                toReturn.append(ws).append("// Assertion generation timed out");
-                break;
-            default:
-                // Should never happen
-                toReturn.append(ws).append("// Assertion generation failed, please make sure you selected the appropriate").append(lsp);
-        }
-        String out = toReturn.toString();
-        out = out.replaceAll("varName", name);
-        return out.replaceAll("resType", "\"" + type + "\"");
     }
 }
