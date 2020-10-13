@@ -41,7 +41,7 @@ public class Assertion {
 			for (int i = 1; i < getPropertyAccesses().size(); i = i + 1) {
 				PropertyAccess rhsPropertyAccess = getPropertyAccesses().get(i);
 				if (rhsPropertyAccess instanceof Call) {
-					Call call = (Call) propertyAccess;
+					Call call = (Call) rhsPropertyAccess;
 					targets.addAll(call.getArguments());
 				}
 			}
@@ -101,6 +101,7 @@ public class Assertion {
 			tokenArray.put(token.getText());
 		}
 		json.put("token", tokenArray);
+		json.put("original", toString());
 		return json;
 	}
 }
