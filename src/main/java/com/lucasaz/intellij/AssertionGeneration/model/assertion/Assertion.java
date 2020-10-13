@@ -3,6 +3,8 @@ package com.lucasaz.intellij.AssertionGeneration.model.assertion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,40 +84,23 @@ public class Assertion {
 		return stringBuilder.toString();
 	}
 
-	public String toJSON() {
-		StringBuilder stringBuilder = new StringBuilder();
-
-		stringBuilder.append("{");
-
-		stringBuilder.append("\"LHS\": \"");
-		stringBuilder.append(getLHS());
-		stringBuilder.append("\",");
+	public JSONObject toJSON() {
+		JSONObject json = new JSONObject();
+		json.put("lhs", getLHS());
 
 		List<Target> rhs = getRHS();
-		stringBuilder.append("\"RHS\": [");
-		for (int i = 0; i < rhs.size(); i = i + 1) {
-			stringBuilder.append("\"");
-			stringBuilder.append(rhs.get(i).text);
-			stringBuilder.append("\"");
-
-			if (i < rhs.size() - 1) {
-				stringBuilder.append(",");
-			}
+		JSONArray rhsArray = new JSONArray();
+		for (Target target : rhs) {
+			rhsArray.put(target.text);
 		}
-		stringBuilder.append("],");
+		json.put("rhs", rhsArray);
 
 		List<PropertyAccess> tokens = getPropertyAccesses();
-		stringBuilder.append("\"tokens\": [");
-		for (int i = 0; i < tokens.size(); i = i + 1) {
-			stringBuilder.append("\"");
-			stringBuilder.append(tokens.get(i).getText());
-			stringBuilder.append("\"");
-
-			if (i < tokens.size() - 1) {
-				stringBuilder.append(",");
-			}
+		JSONArray tokenArray = new JSONArray();
+		for (PropertyAccess token : tokens) {
+			tokenArray.put(token.getText());
 		}
-		stringBuilder.append("]}");
-		return stringBuilder.toString();
+		json.put("token", tokenArray);
+		return json;
 	}
 }

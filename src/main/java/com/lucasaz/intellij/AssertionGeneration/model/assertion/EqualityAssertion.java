@@ -2,6 +2,8 @@ package com.lucasaz.intellij.AssertionGeneration.model.assertion;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -23,47 +25,38 @@ public class EqualityAssertion extends Assertion {
     }
 
     @Override
-    public String toJSON() {
-        String starterJSON = super.toJSON();
-        String removedClosingBrace = starterJSON.replaceAll("}$", ",");
-
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(removedClosingBrace);
-        stringBuilder.append("\"equality\": [");
-
+    public JSONObject toJSON() {
+        JSONObject json = super.toJSON();
+        JSONArray equalityArray = new JSONArray();
         if (eqInclusion) {
-            stringBuilder.append("INCLUSION,");
+            equalityArray.put("INCLUSION");
         }
         if (eqNull) {
-            stringBuilder.append("NULL,");
+            equalityArray.put("NULL");
         }
         if (eqUndefined) {
-            stringBuilder.append("UNDEFINED,");
+            equalityArray.put("UNDEFINED");
         }
         if (eqBoolean) {
-            stringBuilder.append("BOOLEAN,");
+            equalityArray.put("BOOLEAN");
         }
         if (eqTypeof) {
-            stringBuilder.append("TYPEOF,");
+            equalityArray.put("TYPEOF");
         }
         if (eqInstanceOf) {
-            stringBuilder.append("INSTANCEOF,");
+            equalityArray.put("INSTANCEOF");
         }
         if (eqNumeric) {
-            stringBuilder.append("NUMERIC,");
+            equalityArray.put("NUMERIC");
         }
         if (eqTruthiness) {
-            stringBuilder.append("TRUTHINESS,");
+            equalityArray.put("TRUTHINESS");
         }
         if (eqLength) {
-            stringBuilder.append("LENGTH,");
+            equalityArray.put("LENGTH");
         }
 
-        if (stringBuilder.charAt(stringBuilder.length() - 1) == ',') {
-            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-        }
-
-        stringBuilder.append("]}");
-        return stringBuilder.toString();
+        json.put("equality", equalityArray);
+        return json;
     }
 }
