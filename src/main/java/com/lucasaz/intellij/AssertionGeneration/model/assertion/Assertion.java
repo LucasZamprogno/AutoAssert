@@ -81,4 +81,41 @@ public class Assertion {
 		stringBuilder.append(";");
 		return stringBuilder.toString();
 	}
+
+	public String toJSON() {
+		StringBuilder stringBuilder = new StringBuilder();
+
+		stringBuilder.append("{");
+
+		stringBuilder.append("\"LHS\": \"");
+		stringBuilder.append(getLHS());
+		stringBuilder.append("\",");
+
+		List<Target> rhs = getRHS();
+		stringBuilder.append("\"RHS\": [");
+		for (int i = 0; i < rhs.size(); i = i + 1) {
+			stringBuilder.append("\"");
+			stringBuilder.append(rhs.get(i).text);
+			stringBuilder.append("\"");
+
+			if (i < rhs.size() - 1) {
+				stringBuilder.append(",");
+			}
+		}
+		stringBuilder.append("],");
+
+		List<PropertyAccess> tokens = getPropertyAccesses();
+		stringBuilder.append("\"tokens\": [");
+		for (int i = 0; i < tokens.size(); i = i + 1) {
+			stringBuilder.append("\"");
+			stringBuilder.append(tokens.get(i).getText());
+			stringBuilder.append("\"");
+
+			if (i < tokens.size() - 1) {
+				stringBuilder.append(",");
+			}
+		}
+		stringBuilder.append("]}");
+		return stringBuilder.toString();
+	}
 }
