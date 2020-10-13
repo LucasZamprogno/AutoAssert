@@ -35,7 +35,7 @@ public class Docker {
             docker.startContainer(containerId);
             docker.waitContainer(containerId);
             System.out.println("Container finished, removing");
-            //docker.removeContainer(containerId);
+            docker.removeContainer(containerId);
         } catch (DockerCertificateException | DockerException | InterruptedException err) {
             err.printStackTrace();
             throw new PluginException("Error starting/running sub-container");
