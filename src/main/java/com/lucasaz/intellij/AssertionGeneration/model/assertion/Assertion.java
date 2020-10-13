@@ -3,6 +3,8 @@ package com.lucasaz.intellij.AssertionGeneration.model.assertion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +41,7 @@ public class Assertion {
 			for (int i = 1; i < getPropertyAccesses().size(); i = i + 1) {
 				PropertyAccess rhsPropertyAccess = getPropertyAccesses().get(i);
 				if (rhsPropertyAccess instanceof Call) {
-					Call call = (Call) propertyAccess;
+					Call call = (Call) rhsPropertyAccess;
 					targets.addAll(call.getArguments());
 				}
 			}
@@ -80,5 +82,26 @@ public class Assertion {
 		stringBuilder.deleteCharAt(0);
 		stringBuilder.append(";");
 		return stringBuilder.toString();
+	}
+
+	public JSONObject toJSON() {
+		JSONObject json = new JSONObject();
+		json.put("lhs", getLHS());
+
+		List<Target> rhs = getRHS();
+		JSONArray rhsArray = new JSONArray();
+		for (Target target : rhs) {
+			rhsArray.put(target.text);
+		}
+		json.put("rhs", rhsArray);
+
+		List<PropertyAccess> tokens = getPropertyAccesses();
+		JSONArray tokenArray = new JSONArray();
+		for (PropertyAccess token : tokens) {
+			tokenArray.put(token.getText());
+		}
+		json.put("token", tokenArray);
+		json.put("original", toString());
+		return json;
 	}
 }

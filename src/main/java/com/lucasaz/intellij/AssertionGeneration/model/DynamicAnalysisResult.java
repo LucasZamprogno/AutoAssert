@@ -4,6 +4,7 @@ import com.lucasaz.intellij.AssertionGeneration.model.assertion.Assertion;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.List;
@@ -35,6 +36,11 @@ public class DynamicAnalysisResult extends AssertionGenerationResponse {
         if (this.failed) {
             json.put("failed", this.reason);
         }
+        JSONArray assertions = new JSONArray();
+        for (Assertion assertion : associatedBlock) {
+            assertions.put(assertion.toJSON());
+        }
+        json.put("assertions", assertions);
         return json.toString();
     }
 }
