@@ -744,7 +744,7 @@ public class MineAssertions {
 //				"https://github.com/apiaryio/dredd" //,
 //				"https://github.com/bitpay/copay",
 //				"https://github.com/huytd/agar.io-clone",
-				"https://github.com/davidmerfield/Typeset" //,
+//				"https://github.com/davidmerfield/Typeset" //,
 //				"https://github.com/electrode-io/electrode",
 //				"https://github.com/alibaba/uirecorder",
 //				"https://github.com/carteb/carte-blanche",
@@ -786,7 +786,7 @@ public class MineAssertions {
 //				"https://github.com/diogomoretti/react-snakke",
 //				"https://github.com/pemrouz/popper",
 //				"https://github.com/akserg/ng2-toasty",
-//				"https://github.com/philcockfield/ui-harness",
+//				"https://github.com/philcockfield/ui-harness"
 //				"https://github.com/RobinCK/typeorm-fixtures",
 //				"https://github.com/distillpub/distill-template",
 //				"https://github.com/Modular-Network/ethereum-libraries",
