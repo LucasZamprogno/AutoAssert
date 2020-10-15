@@ -468,7 +468,7 @@ public class MineAssertions {
 										errorMessage
 								);
 								if (!error) {
-									saveResultToFile(repo.toString(), result);
+									saveResultToFile(repo.toString().replace("./temp/", ""), result);
 								}
 							}
 						}
@@ -574,7 +574,8 @@ public class MineAssertions {
 	}
 
 	private static void saveResultToFile(String repo, DynamicAnalysisResult result) {
-		String fileName = "./save/dynamic/" + result.getSourceFilePath() + "-" + generateCounter;
+		String withinRepo = result.getSourceFilePath().replace(".", "");
+		String fileName = "./save/dynamic/" + repo + withinRepo + "-" + generateCounter;
 		try {
 			File file = new File(fileName);
 			Util.ensureDir(file.getParent());
@@ -735,40 +736,42 @@ public class MineAssertions {
 //				"https://github.com/palantir/blueprint",
 //				"https://github.com/nock/nock"//,
 //				"https://github.com/ConsenSys/truffle",
-////				"https://github.com/DevExpress/testcafe", // Causes a crash?
+//				"https://github.com/trufflesuite/truffle", // [4]
+////				"https://github.com/DevExpress/testcafe", // [5] Causes a crash?
 //				"https://github.com/sahat/satellizer",
 //				"https://github.com/jonobr1/two.js",
 //				"https://github.com/vigetlabs/gulp-starter",
-//				"https://github.com/ipfs/js-ipfs",
+//				"https://github.com/ipfs/js-ipfs", // [3]
 //				"https://github.com/theintern/intern",
 //				"https://github.com/apiaryio/dredd" //,
 //				"https://github.com/bitpay/copay",
 //				"https://github.com/huytd/agar.io-clone",
-//				"https://github.com/davidmerfield/Typeset" //,
+//				"https://github.com/davidmerfield/Typeset" // [2]
 //				"https://github.com/electrode-io/electrode",
 //				"https://github.com/alibaba/uirecorder",
 //				"https://github.com/carteb/carte-blanche",
-//				"https://github.com/adleroliveira/dreamjs",
+//				"https://github.com/adleroliveira/dreamjs", // [6]
 //				"https://github.com/microsoft/pxt",
 //				"https://github.com/0xProject/0x-monorepo",
 //				"https://github.com/samgozman/YoptaScript",
-////				"https://github.com/open-wc/open-wc", // Causes a crash?
+////				"https://github.com/open-wc/open-wc", // [1], Causes a crash?
 //				"https://github.com/jaymedavis/hubble",
 //				"https://github.com/smartcontractkit/chainlink",
 //				"https://github.com/ruanyf/es-checker",
-//				"https://github.com/dareid/chakram",
+//				"https://github.com/dareid/chakram" // [7]
 //				"https://github.com/omnisharp/generator-aspnet",
 //				"https://github.com/firebase/bolt",
 //				"https://github.com/xolvio/chimp",
-//				"https://github.com/sourcegraph/javascript-typescript-langserver",
+//				"https://github.com/sourcegraph/javascript-typescript-langserver", // [8]
 //				"https://github.com/dharmafly/noodle",
 //				"https://github.com/dalekjs/dalek",
 //				"https://github.com/racker/dreadnot",
 //				"https://github.com/polymer/web-component-tester",
 //				"https://github.com/Polymer/web-component-tester",
+//				"https://github.com/Polymer/tools", // [9]
 //				"https://github.com/mojotech/dill.js",
 //				"https://github.com/mojotech/pioneer",
-//				"https://github.com/TheBrainFamily/cypress-cucumber-preprocessor",
+//				"https://github.com/TheBrainFamily/cypress-cucumber-preprocessor", // [10]
 //				"https://github.com/taskcluster/neo",
 //				"https://github.com/mozilla/neo",
 //				"https://github.com/lprhodes/homebridge-broadlink-rm",
@@ -790,13 +793,14 @@ public class MineAssertions {
 //				"https://github.com/RobinCK/typeorm-fixtures",
 //				"https://github.com/distillpub/distill-template",
 //				"https://github.com/Modular-Network/ethereum-libraries",
-//				"https://github.com/exratione/lambda-complex",
+//				"https://github.com/exratione/lambda-complex", // [11]
 //				"https://github.com/iden3/circom",
 //				"https://github.com/rosshinkley/nightmare-examples",
+//				"https://github.com/segmentio/nightmare.git", // [12]
 //				"https://github.com/Koenkk/zigbee-shepherd-converters",
 //				"https://github.com/sporto/planetproto",
 //				"https://github.com/ether/ueberDB",
-//				"https://github.com/lonelyplanet/backpack-ui",
+//				"https://github.com/lonelyplanet/backpack-ui", // [13]
 //				"https://github.com/cardstack/cardstack",
 //				"https://github.com/opengsn/gsn",
 //				"https://github.com/rodowi/Paparazzo.js",
@@ -806,13 +810,13 @@ public class MineAssertions {
 //				"https://github.com/bhushankumarl/amazon-mws",
 //				"https://github.com/pega-digital/bolt",
 //				"https://github.com/alanhoff/node-tar.gz",
-//				"https://github.com/jsillitoe/react-currency-input",
+//				"https://github.com/jsillitoe/react-currency-input", // [14]
 //				"https://github.com/anticoders/gagarin",
 //				"https://github.com/masumsoft/express-cassandra",
-//				"https://github.com/rapid-sensemaking-framework/noflo-rsf",
-//				"https://github.com/thetutlage/japa",
-//				"https://github.com/trufflesuite/ganache-core",
-//				"https://github.com/sebpiq/rhizome",
+//				"https://github.com/rapid-sensemaking-framework/noflo-rsf", // [15]
+//				"https://github.com/thetutlage/japa", // [16]
+//				"https://github.com/trufflesuite/ganache-core", // [17]
+//				"https://github.com/sebpiq/rhizome", // [18]
 //				"https://github.com/nordcloud/serverless-mocha-plugin",
 //				"https://github.com/chishui/JSSoup",
 //				"https://github.com/kobigurk/semaphore",
