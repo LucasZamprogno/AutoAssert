@@ -793,7 +793,7 @@ public class MineAssertions {
 //				"https://github.com/RobinCK/typeorm-fixtures",
 //				"https://github.com/distillpub/distill-template",
 //				"https://github.com/Modular-Network/ethereum-libraries",
-				"https://github.com/exratione/lambda-complex"
+//				"https://github.com/exratione/lambda-complex", // [11]
 //				"https://github.com/iden3/circom",
 //				"https://github.com/rosshinkley/nightmare-examples",
 //				"https://github.com/segmentio/nightmare.git", // [12]
