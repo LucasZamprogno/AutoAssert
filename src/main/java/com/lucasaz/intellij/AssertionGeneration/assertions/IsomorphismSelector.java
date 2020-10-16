@@ -22,6 +22,8 @@ public class IsomorphismSelector {
                 return "expect(" + LHS + ").to.have.length(" + RHS + ");";
             case TYPE:
                 return "expect(" + LHS + ").to.be.a(" + RHS + ");";
+            case BOOL:
+                return "expect(" + LHS + ").to.be." + RHS + ";";
         }
         return "// Wat";
     }
