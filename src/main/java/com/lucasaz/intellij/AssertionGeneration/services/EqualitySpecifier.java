@@ -242,13 +242,13 @@ public class EqualitySpecifier {
             return checkRHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
                 @Override
                 boolean call(V8Object v8Target) {
-                    return isExactKind(v8Target, "UndefinedKeyword");
+                    return isExactKind(v8Target, "UndefinedKeyword") || (isExactKind(v8Target, "Identifier") && "undefined".equals(v8Target.get("text")));
                 }
             }) || checkLHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
                 @Override
                 boolean call(V8Object v8Target) {
                     // return isExactKind(v8Target, "BinaryExpression") && targetHasInSubtree(v8Target, "UndefinedKeyword");
-                    return targetHasKindInBinop(v8Target, "UndefinedKeyword");
+                    return targetHasKindInBinop(v8Target, "UndefinedKeyword") || (isExactKind(v8Target, "Identifier") && "undefined".equals(v8Target.get("text")));
                 }
             });
         } else {
