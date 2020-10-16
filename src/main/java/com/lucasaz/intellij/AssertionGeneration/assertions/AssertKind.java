@@ -9,5 +9,6 @@ public enum AssertKind {
     NOT_THROW,
     NULL,
     UNDEFINED,
-    LENGTH
+    LENGTH,
+    BOOL
 }

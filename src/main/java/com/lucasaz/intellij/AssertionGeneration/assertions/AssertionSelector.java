@@ -17,6 +17,12 @@ public class AssertionSelector {
         List<String> assertions = new ArrayList<String>();
         switch (type) {
             case "boolean":
+                boolean bool = observed.getBoolean("value");
+                val = Boolean.toString(bool);
+                assertions.add(IsomorphismSelector.getAssertion(AssertKind.EXIST, name, val));
+                assertions.add(IsomorphismSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
+                assertions.add(IsomorphismSelector.getAssertion(AssertKind.BOOL, name, val));
+                break;
             case "number":
                 val = observed.get("value").toString();
                 assertions.add(IsomorphismSelector.getAssertion(AssertKind.EXIST, name, val));
