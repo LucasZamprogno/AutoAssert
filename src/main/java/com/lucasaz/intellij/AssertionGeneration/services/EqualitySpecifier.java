@@ -21,7 +21,9 @@ public class EqualitySpecifier {
             "deepStrictEqual",
             "equals",
             "toStrictEqual",
-            "equalIgnoreSpaces"
+            "equalIgnoreSpaces",
+            "notDeepStrictEqual",
+            "notStrictEqual"
     );
 
     public static boolean isInEqualityCategory(Assertion assertion) {
