@@ -5,12 +5,20 @@ res_dir = "./results/"
 res_map = {}
 repos = os.listdir(res_dir)
 
-foo = 0
+def smush_extra_info_downward(results):
+    for result in results:
+        ours = [x.strip() for x in result["ours"].split("\n")]
+        path = result["path"]
+        for assertion in result["assertions"]:
+            assertion["ours"] = ours
+            assertion["path"] = path
+            
 
 def get_our_clusters(assertions):
     clusters = []
     for assertion in assertions:
-        if "to.equal(true)" in assertion or "to.equal(false)" in assertion:
+        if "to.be.true" in assertion or "to.be.false" in assertion:
+        # if "to.equal(true)" in assertion or "to.equal(false)" in assertion:
             clusters.append("boolean")
         elif "to.be.null" in assertion or "to.be.undefined" in assertion or "to.exist" in assertion:
             clusters.append("existence")
@@ -77,7 +85,9 @@ def add_to_cluster(results, assertion):
 
 def load_result(item):
     with open(item, encoding="utf-8") as f:
-        return json.load(f)
+        result = json.load(f)
+        result["path"] = item
+        return result
 
 def get_all_results(current):
     res = []
@@ -92,26 +102,6 @@ def get_all_results(current):
 def failed(assertion):
     return assertion["ours"].strip().startswith("//")
 
-pass_res = []
-fail_res = []
-
-for top_level_repo in repos:
-    res_map[top_level_repo] = {}
-    path = os.path.join(res_dir, top_level_repo)
-    all_res = get_all_results(path)
-    # pass_res = []
-    # fail_res = []
-    for res in all_res:
-        if (failed(res)):
-            fail_res.append(res)
-        else:
-            pass_res.append(res)
-    # res_map[top_level_repo]["pass"] = pass_res
-    # res_map[top_level_repo]["fail"] = fail_res
-    # print(top_level_repo)
-    # print("Pass:", len(pass_res))
-    # print("Fail:", len(fail_res))
-
 def pct_breakdown():
     clusters = {
         "total": 0
@@ -124,7 +114,7 @@ def pct_breakdown():
     final_total = clusters["total"]
     for cluster in clusters:
         clusters[cluster] = round((clusters[cluster] / final_total) * 100, 2)
-    print(clusters)
+    print(json.dumps(clusters))
 
 def fix_eql_cluster(assertion, their_clusters):
     if "equality" in their_clusters and "equality" in assertion and len(assertion["equality"]) > 0:
@@ -146,6 +136,7 @@ def match_breakdown():
             "miss": 0
         }
     }
+    misses = []
     for res in pass_res:
         assertions = res["assertions"]
         our_clusters = get_our_clusters(res["ours"].split("\n"))
@@ -172,10 +163,34 @@ def match_breakdown():
         hit = scores[score]["hit"]
         miss = scores[score]["miss"]
         final[score] = round(100 * hit / (hit + miss), 2)
-    print(final)
+    print(json.dumps(final))
     print("Hit:", scores["total"]["hit"])
     print("Miss:", scores["total"]["miss"])
+    for cluster in scores:
+        if cluster == "equality" or cluster == "type" or cluster == "boolean" or cluster == "existence" or cluster == "throw":
+            for miss in scores[cluster]["misses"]:
+                print(miss["path"])
 
+pass_res = []
+fail_res = []
 
+for top_level_repo in repos:
+    res_map[top_level_repo] = {}
+    path = os.path.join(res_dir, top_level_repo)
+    all_res = get_all_results(path)
+    # pass_res = []
+    # fail_res = []
+    for res in all_res:
+        if (failed(res)):
+            fail_res.append(res)
+        else:
+            pass_res.append(res)
+    # res_map[top_level_repo]["pass"] = pass_res
+    # res_map[top_level_repo]["fail"] = fail_res
+    # print(top_level_repo)
+    # print("Pass:", len(pass_res))
+    # print("Fail:", len(fail_res))
+
+smush_extra_info_downward(pass_res)
 pct_breakdown()
 match_breakdown()
