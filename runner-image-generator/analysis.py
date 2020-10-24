@@ -26,7 +26,7 @@ def get_our_clusters(assertions):
             clusters.append("equality")
         elif "to.throw" in assertion or "to.not.throw" in assertion:
             clusters.append("throw")
-        elif "to.have.length" in assertion:
+        elif "to.have.length" in assertion or ".length" in assertion or ".size())." in assertion:
             clusters.append("length")
         elif "to.be.a" in assertion:
             clusters.append("type")
@@ -136,7 +136,6 @@ def match_breakdown():
             "miss": 0
         }
     }
-    misses = []
     for res in pass_res:
         assertions = res["assertions"]
         our_clusters = get_our_clusters(res["ours"].split("\n"))
@@ -167,7 +166,7 @@ def match_breakdown():
     print("Hit:", scores["total"]["hit"])
     print("Miss:", scores["total"]["miss"])
     for cluster in scores:
-        if cluster == "equality" or cluster == "type" or cluster == "boolean" or cluster == "existence" or cluster == "throw":
+        if cluster == "equality" or cluster == "type" or cluster == "boolean" or cluster == "existence" or cluster == "throw" or cluster == "length":
             for miss in scores[cluster]["misses"]:
                 print(miss["path"])
 
