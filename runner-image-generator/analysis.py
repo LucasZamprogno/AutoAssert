@@ -100,7 +100,7 @@ def get_all_results(current):
     return res
 
 def failed(assertion):
-    return assertion["ours"].strip().startswith("//")
+    return assertion["ours"].strip().startswith("//") or assertion["error"]
 
 def pct_breakdown():
     clusters = {
@@ -128,6 +128,21 @@ def fix_eql_cluster(assertion, their_clusters):
             their_clusters.remove("undefined")
             their_clusters.append("existence")
     return their_clusters
+
+def not_checks(scores):
+    not_count = 0
+    for cluster in scores:
+        print(cluster.upper())
+        if cluster == "equality" or cluster == "type" or cluster == "boolean" or cluster == "existence" or cluster == "throw" or cluster == "length":
+            cluster_not_count = 0
+            for hit in scores[cluster]["hits"]:
+                if "not" in hit["original"].lower():
+                    if input(hit["original"]) == "y":
+                        cluster_not_count += 1
+            not_count += cluster_not_count
+            print(cluster_not_count)
+    print(not_count)
+
 
 def match_breakdown():
     scores = {
@@ -161,18 +176,30 @@ def match_breakdown():
     for score in scores:
         hit = scores[score]["hit"]
         miss = scores[score]["miss"]
+        print(score, hit + miss)
         final[score] = round(100 * hit / (hit + miss), 2)
     print(json.dumps(final))
     print("Hit:", scores["total"]["hit"])
     print("Miss:", scores["total"]["miss"])
-    for cluster in scores:
-        if cluster == "equality" or cluster == "type" or cluster == "boolean" or cluster == "existence" or cluster == "throw" or cluster == "length":
-            for miss in scores[cluster]["misses"]:
-                print(miss["path"])
+    #not_checks(scores)
+
+def get_timeouts():
+    for fail in fail_res:
+        if fail["error"]:
+            err = fail["failed"]
+            if "ETIMEDOUT" in err:
+                print(err)
+
+def get_diff_count():
+    diffs = []
+    for passed in pass_res:
+        if passed["diff"]:
+            diffs.append(passed)
+    print(len(diffs))
 
 pass_res = []
 fail_res = []
-
+tmp = 0
 for top_level_repo in repos:
     res_map[top_level_repo] = {}
     path = os.path.join(res_dir, top_level_repo)
@@ -191,5 +218,7 @@ for top_level_repo in repos:
     # print("Fail:", len(fail_res))
 
 smush_extra_info_downward(pass_res)
-pct_breakdown()
-match_breakdown()
+# pct_breakdown()
+# match_breakdown()
+# get_timeouts()
+get_diff_count()
