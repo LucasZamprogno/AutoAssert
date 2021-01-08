@@ -21,7 +21,9 @@ public class EqualitySpecifier {
             "deepStrictEqual",
             "equals",
             "toStrictEqual",
-            "equalIgnoreSpaces"
+            "equalIgnoreSpaces",
+            "notDeepStrictEqual",
+            "notStrictEqual"
     );
 
     public static boolean isInEqualityCategory(Assertion assertion) {
@@ -205,11 +207,17 @@ public class EqualitySpecifier {
     private static boolean isEqualityNull(Assertion assertion, Map<Target, V8Object> mapToV8Nodes) {
         /*
         expect(res).to.equal(null);            ✅
+        expect(null).to.equal(res);            ✅
         expect(res === null).to.equal(true);   ❌
         expect(null == res).to.equal(false);   ❌
         expect(res.equals(null)).to.be(false); ❌
         */
         return checkRHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
+            @Override
+            boolean call(V8Object v8Target) {
+                return isExactKind(v8Target, "NullKeyword");
+            }
+        }) || checkLHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
             @Override
             boolean call(V8Object v8Target) {
                 return isExactKind(v8Target, "NullKeyword");
@@ -259,9 +267,15 @@ public class EqualitySpecifier {
     private static boolean isEqualityBoolean(Assertion assertion, Map<Target, V8Object> mapToV8Nodes) {
         /*
         expect(res).to.equal(true);           ✅
+        expect(true).to.equal(res);           ✅
         expect(res === false).to.equal(true); ❌
         */
         return checkRHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
+            @Override
+            boolean call(V8Object v8Target) {
+                return isExactKind(v8Target, "TrueKeyword") || isExactKind(v8Target, "FalseKeyword");
+            }
+        }) || checkLHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
             @Override
             boolean call(V8Object v8Target) {
                 return isExactKind(v8Target, "TrueKeyword") || isExactKind(v8Target, "FalseKeyword");

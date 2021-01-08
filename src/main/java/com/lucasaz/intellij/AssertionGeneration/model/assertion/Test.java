@@ -16,7 +16,7 @@ public class Test {
         this.assertions = assertions;
         this.filePath = filePath;
         this.line = line;
-        assertionBlocks = createAssertionBlocks(assertions);
+        this.assertionBlocks = createAssertionBlocks(assertions);
     }
 
     private List<List<Assertion>> createAssertionBlocks(List<Assertion> assertions) {
@@ -29,22 +29,12 @@ public class Test {
                 List<Assertion> block = new ArrayList<>();
                 block.add(currentAssertion);
                 Target expectingOn = currentAssertion.getLHS();
-                if (!expectingOn.isExpression() && !expectingOn.isLiteral() && !expectingOn.isIncludesCallExpression()) {
-                    while(i < assertions.size() &&
-                            consecutiveLines(assertions.get(i - 1), assertions.get(i)) &&
-                            assertions.get(i).isExpectingValue() &&
-                            sameRootIdentifier(expectingOn, assertions.get(i).getLHS())) {
-                        block.add(assertions.get(i));
-                        i = i + 1;
-                    }
-                } else {
-                    while(i < assertions.size() &&
-                            consecutiveLines(assertions.get(i - 1), assertions.get(i)) &&
-                            assertions.get(i).isExpectingValue() &&
-                            sameText(expectingOn, assertions.get(i).getLHS())) {
-                        block.add(assertions.get(i));
-                        i = i + 1;
-                    }
+                while(i < assertions.size() &&
+                        consecutiveLines(assertions.get(i - 1), assertions.get(i)) &&
+                        assertions.get(i).isExpectingValue() &&
+                        sameText(expectingOn, assertions.get(i).getLHS())) {
+                    block.add(assertions.get(i));
+                    i = i + 1;
                 }
                 blocks.add(block);
             }

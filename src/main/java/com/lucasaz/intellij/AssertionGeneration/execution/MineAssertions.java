@@ -430,12 +430,7 @@ public class MineAssertions {
 								Assertion firstAssertion = block.get(0);
 								int line = firstAssertion.getLine() - 1;
 								Target assertingOn = firstAssertion.getLHS();
-								String root;
-								if (!assertingOn.isIncludesCallExpression() && !assertingOn.isLiteral() && !assertingOn.isExpression()) {
-									root = assertingOn.getRoot();
-								} else {
-									root = assertingOn.getText();
-								}
+								String root = assertingOn.getText();
 								File file = new File(filePath.toString());
 								String fileName = file.getName();
 
