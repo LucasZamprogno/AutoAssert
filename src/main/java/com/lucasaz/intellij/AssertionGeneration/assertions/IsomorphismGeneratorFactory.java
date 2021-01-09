@@ -21,12 +21,9 @@ public class IsomorphismGeneratorFactory {
                 }
             };
         } else {
-            // TODO get actual defaults
             return new IsomorphismGenerator() {
-                private String start = "expect(";
-                private String end = ").to.exist;";
                 public String gen(String LHS, String RHS) {
-                    return start + LHS  + end;
+                    return "// Isomorphism template \"" + template + "\" is invalid";
                 }
             };
         }

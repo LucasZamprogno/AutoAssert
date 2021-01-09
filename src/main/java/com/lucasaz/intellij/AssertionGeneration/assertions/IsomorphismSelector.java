@@ -1,23 +1,40 @@
 package com.lucasaz.intellij.AssertionGeneration.assertions;
 
-import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class IsomorphismSelector {
+    // First elements will be made into defaults!
+    public final static String[] NULL_OPTIONS = {"expect(LHS).to.be.null;", "expect(LHS).to.equal(null);"};
+    public final static String[] UNDEFINED_OPTIONS = {"expect(LHS).to.be.undefined;", "expect(LHS).to.equal(RHS);"};
+    public final static String[] EXIST_OPTIONS = {"expect(LHS).to.exist;"};
+    public final static String[] THROW_OPTIONS = {"expect(LHS).to.throw;"};
+    public final static String[] NOT_THROW_OPTIONS = {"expect(LHS).to.not.throw;"};
+    public final static String[] EQUALITY_OPTIONS = {"expect(LHS).to.equal(RHS);", "expect(LHS).to.eq(RHS);"};
+    public final static String[] DEEP_EQUALITY_OPTIONS = {"expect(LHS).to.deep.equal(RHS);", "expect(LHS).to.eql(RHS);"};
+    public final static String[] LENGTH_OPTIONS = {"expect(LHS).to.have.length(RHS);", "expect(LHS.length).to.equal(RHS);"};
+    public final static String[] TYPE_OPTIONS = {"expect(LHS).to.be.a(RHS);", "expect(LHS).to.be.an(RHS);"};
+    public final static String[] BOOLEAN_OPTIONS = {"expect(LHS).to.be.RHS;", "expect(LHS).to.equal(RHS);"};
+    public Map<AssertKind, String[]> optionsMap;
+    public Map<AssertKind, String> defaults;
     private Map<AssertKind, IsomorphismGenerator> genMap;
 
     public IsomorphismSelector() {
-        this.genMap = this.getDefaults();
+        this.setupOptionsAndDefaults();
+        this.genMap = this.mapStrMapToIsoGenMap(this.defaults);
     }
 
     public IsomorphismSelector(Map<AssertKind, String> isomorphisms) {
-        this.genMap = this.mapMapToOtherMap(isomorphisms);
+        this();
+        Map<AssertKind, IsomorphismGenerator> asIsoGen = this.mapStrMapToIsoGenMap(isomorphisms);
+        // Replace defaults
+        for (Map.Entry<AssertKind,IsomorphismGenerator> entry : asIsoGen.entrySet()) {
+            this.genMap.put(entry.getKey(), entry.getValue());
+        }
     }
 
-    private Map<AssertKind, IsomorphismGenerator> mapMapToOtherMap(Map<AssertKind, String> asString) {
+    private Map<AssertKind, IsomorphismGenerator> mapStrMapToIsoGenMap(Map<AssertKind, String> asString) {
         // From https://stackoverflow.com/questions/25903137/java8-hashmapx-y-to-hashmapx-z-using-stream-map-reduce-collector/25903190
         return asString.entrySet().stream().collect(Collectors.toMap(
                     e -> e.getKey(),
@@ -25,65 +42,31 @@ public class IsomorphismSelector {
                 ));
     }
 
-    private Map<AssertKind, IsomorphismGenerator> getDefaults() {
-        Map<AssertKind, String> temp = new HashMap<>();
-        temp.put(AssertKind.NULL, "expect(LHS).to.be.null;");
-        temp.put(AssertKind.UNDEFINED, "expect(LHS).to.be.undefined;");
-        temp.put(AssertKind.EXIST, "expect(LHS).to.exist;");
-        temp.put(AssertKind.THROW, "expect(LHS).to.throw;");
-        temp.put(AssertKind.NOT_THROW, "expect(LHS).to.not.throw;");
-        temp.put(AssertKind.EQUAL, "expect(LHS).to.equal(RHS);");
-        temp.put(AssertKind.DEEP_EQUAL, "expect(LHS).to.deep.equal(RHS);");
-        temp.put(AssertKind.LENGTH, "expect(LHS).to.have.length(RHS);");
-        temp.put(AssertKind.TYPE, "expect(LHS).to.be.a(RHS);");
-        temp.put(AssertKind.BOOL, "expect(LHS).to.be.RHS;");
-        return this.mapMapToOtherMap(temp);
+    private Map<AssertKind, String> mapStrArrMapToFirstElemMap(Map<AssertKind, String[]> asStringArr) {
+        // From https://stackoverflow.com/questions/25903137/java8-hashmapx-y-to-hashmapx-z-using-stream-map-reduce-collector/25903190
+        return asStringArr.entrySet().stream().collect(Collectors.toMap(
+                e -> e.getKey(),
+                e -> e.getValue()[0]
+        ));
+    }
+
+    private void setupOptionsAndDefaults() {
+        Map<AssertKind, String[]> optionsMap = new HashMap<>();
+        optionsMap.put(AssertKind.NULL, IsomorphismSelector.NULL_OPTIONS);
+        optionsMap.put(AssertKind.UNDEFINED, IsomorphismSelector.UNDEFINED_OPTIONS);
+        optionsMap.put(AssertKind.EXIST, IsomorphismSelector.EXIST_OPTIONS);
+        optionsMap.put(AssertKind.THROW, IsomorphismSelector.THROW_OPTIONS);
+        optionsMap.put(AssertKind.NOT_THROW, IsomorphismSelector.NOT_THROW_OPTIONS);
+        optionsMap.put(AssertKind.EQUAL, IsomorphismSelector.EQUALITY_OPTIONS);
+        optionsMap.put(AssertKind.DEEP_EQUAL, IsomorphismSelector.DEEP_EQUALITY_OPTIONS);
+        optionsMap.put(AssertKind.LENGTH, IsomorphismSelector.LENGTH_OPTIONS);
+        optionsMap.put(AssertKind.TYPE, IsomorphismSelector.TYPE_OPTIONS);
+        optionsMap.put(AssertKind.BOOL, IsomorphismSelector.BOOLEAN_OPTIONS);
+        this.optionsMap = optionsMap;
+        this.defaults = mapStrArrMapToFirstElemMap(optionsMap);
     }
 
     public String getAssertion(AssertKind kind, String LHS, String RHS) {
         return this.genMap.get(kind).gen(LHS, RHS);
     }
 }
-/*
-interface Gen {
-    public String gen(String LHS, String RHS);
-}
-
-class Main {
-  public static void main(String args[]) {
-    String lhs = "foo";
-    String rhs = "\"bar\"";
-    String start1 = "expect(LHS).to.be.true;";
-    String start2 = "expect(LHS).to.equal(RHS);";
-    Gen gen1 = Main.makeGen(start1);
-    Gen gen2 = Main.makeGen(start2);
-    System.out.println(gen1.gen(lhs, rhs));
-    System.out.println(gen2.gen(lhs, rhs));
-  }
-
-  private static Gen makeGen(String template) {
-    String[]tokens = template.split("(LHS)|(RHS)");
-    if (tokens.length == 2) { // LHS only
-      return new Gen() {
-        private String start = tokens[0];
-        private String end = tokens[1];
-        public String gen(String LHS, String RHS) {
-          return start + LHS + end;
-        }
-      };
-    } else if (tokens.length == 3) {
-      return new Gen() {
-          private String start = tokens[0];
-          private String middle = tokens[1];
-          private String end = tokens[2];
-          public String gen(String LHS, String RHS) {
-              return start + LHS + middle + RHS + end;
-          }
-      };
-    } else {
-        throw new RuntimeException();
-    }
-
-  }
-}
- */

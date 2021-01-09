@@ -78,7 +78,7 @@ public class AssertionSelector {
                 len = (int) observed.get("length");
                 assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
                 assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, "\"Set\"")); // hardcoding set for caps
-                assertions.add(isoSelector.getAssertion(AssertKind.LENGTH, name, String.valueOf(len)));
+                assertions.add(isoSelector.getAssertion(AssertKind.LENGTH, name, String.valueOf(len))); // TODO this won't work!
                 assertions.add(isoSelector.getAssertion(AssertKind.DEEP_EQUAL, name, val));
                 break;
             case "promise":
