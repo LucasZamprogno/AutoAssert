@@ -79,6 +79,8 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
             for (String key : AssertionGenerationSettingsConfigurable.ISO_KEYS) {
                 AssertKind kind = AssertionGenerationSettingsConfigurable.keyToAssertKind(key);
                 String def = new IsomorphismSelector().defaults.get(kind);
+                System.out.println("Setting default");
+                System.out.println(def);
                 isoSelected.add(this.settings.getValue(key, def));
             }
             boolean build = this.settings.getBoolean(BUILD_ALL_KEY);
@@ -99,6 +101,9 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
         boolean pathChanged = !this.mySettingsPane.getPath().equals(this.settings.getValue(PATH_KEY));
         boolean isoChanged = false;
         for (String key : AssertionGenerationSettingsConfigurable.ISO_KEYS) {
+            AssertKind kind = AssertionGenerationSettingsConfigurable.keyToAssertKind(key); // TODO Extract?
+            String def = new IsomorphismSelector().defaults.get(kind);
+            System.out.println(this.settings.getValue(key, def)); // Default value in case it has never been saved and loads null? Better way?
             isoChanged = isoChanged || !this.mySettingsPane.getIso(key).equals(this.settings.getValue(key));
         }
         return buildChanged || autoChanged || pathChanged || isoChanged;
@@ -110,7 +115,7 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
         this.settings.setValue(AUTO_CONFIG_KEY, mySettingsPane.getAuto());
         this.settings.setValue(PATH_KEY, mySettingsPane.getPath());
         for (String key : AssertionGenerationSettingsConfigurable.ISO_KEYS) {
-            this.settings.setValue(NULL_KEY, mySettingsPane.getIso(key));
+            this.settings.setValue(key, mySettingsPane.getIso(key));
         }
     }
 }

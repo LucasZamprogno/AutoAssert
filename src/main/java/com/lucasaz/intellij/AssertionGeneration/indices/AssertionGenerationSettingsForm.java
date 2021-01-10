@@ -16,7 +16,7 @@ public class AssertionGenerationSettingsForm {
     private JComboBox<String> nullIsomorphism;
     private JComboBox<String> undefinedIsomorphism;
     private JComboBox<String> equalityIsomorphism;
-    private JComboBox deepEqualityIsomorphism;
+    private JComboBox<String> deepEqualityIsomorphism;
     private JComboBox<String> lengthIsomorphism;
     private JComboBox<String> typeIsomorphism;
     private JComboBox<String> booleanIsomorphism;
@@ -116,7 +116,7 @@ public class AssertionGenerationSettingsForm {
                 break;
             case DEEP_EQUAL:
                 options = IsomorphismSelector.DEEP_EQUALITY_OPTIONS;
-                isoBox = this.equalityIsomorphism;
+                isoBox = this.deepEqualityIsomorphism;
                 break;
             case LENGTH:
                 options = IsomorphismSelector.LENGTH_OPTIONS;
