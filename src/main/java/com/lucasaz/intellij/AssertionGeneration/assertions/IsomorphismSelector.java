@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 public class IsomorphismSelector {
     // First elements will be made into defaults!
     public final static String[] NULL_OPTIONS = {"expect(LHS).to.be.null;", "expect(LHS).to.equal(null);"};
-    public final static String[] UNDEFINED_OPTIONS = {"expect(LHS).to.be.undefined;", "expect(LHS).to.equal(RHS);"};
+    public final static String[] UNDEFINED_OPTIONS = {"expect(LHS).to.be.undefined;", "expect(LHS).to.equal(undefined);"};
     public final static String[] EXIST_OPTIONS = {"expect(LHS).to.exist;"};
     public final static String[] THROW_OPTIONS = {"expect(LHS).to.throw;"};
     public final static String[] NOT_THROW_OPTIONS = {"expect(LHS).to.not.throw;"};

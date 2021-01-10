@@ -9,13 +9,16 @@ import java.util.List;
 public class AssertionSelector {
 
     public static String getAllAssertions(JSONObject observed, String name, String ws) {
+        return AssertionSelector.getAllAssertions(observed, name, ws, new IsomorphismSelector());
+    }
+
+    public static String getAllAssertions(JSONObject observed, String name, String ws, IsomorphismSelector isoSelector) {
         String type = (String) observed.get("type");
         String typeQuoted = "\"" + type + "\"";
         String lsp = "\n"; // We'll leave this hardcoded for now. Other option is System.getProperty("line.separator");
         String val;
         int len;
         List<String> assertions = new ArrayList<String>();
-        IsomorphismSelector isoSelector = new IsomorphismSelector();
         switch (type) {
             case "boolean":
                 boolean bool = observed.getBoolean("value");

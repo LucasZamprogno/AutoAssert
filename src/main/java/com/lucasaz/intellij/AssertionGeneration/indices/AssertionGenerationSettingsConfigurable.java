@@ -13,7 +13,9 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AssertionGenerationSettingsConfigurable implements SearchableConfigurable {
     public static final String BUILD_ALL_KEY = "AssertionGenerationBuildAllKey";
@@ -50,6 +52,18 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
         }
     }
 
+    public static Map<AssertKind, String> getSelectedIsos(PropertiesComponent settings) {
+        HashMap<AssertKind, String> map = new HashMap<>();
+        map.put(AssertKind.NULL, settings.getValue(NULL_KEY));
+        map.put(AssertKind.UNDEFINED, settings.getValue(UNDEFINED_KEY));
+        map.put(AssertKind.EQUAL, settings.getValue(EQULITY_KEY));
+        map.put(AssertKind.DEEP_EQUAL, settings.getValue(DEEP_EQULITY_KEY));
+        map.put(AssertKind.LENGTH, settings.getValue(LENGTH_KEY));
+        map.put(AssertKind.TYPE, settings.getValue(TYPE_KEY));
+        map.put(AssertKind.BOOL, settings.getValue(BOOL_KEY));
+        return map;
+    }
+
     private AssertionGenerationSettingsForm mySettingsPane;
     private PropertiesComponent settings;
 
@@ -79,8 +93,6 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
             for (String key : AssertionGenerationSettingsConfigurable.ISO_KEYS) {
                 AssertKind kind = AssertionGenerationSettingsConfigurable.keyToAssertKind(key);
                 String def = new IsomorphismSelector().defaults.get(kind);
-                System.out.println("Setting default");
-                System.out.println(def);
                 isoSelected.add(this.settings.getValue(key, def));
             }
             boolean build = this.settings.getBoolean(BUILD_ALL_KEY);
@@ -103,8 +115,7 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
         for (String key : AssertionGenerationSettingsConfigurable.ISO_KEYS) {
             AssertKind kind = AssertionGenerationSettingsConfigurable.keyToAssertKind(key); // TODO Extract?
             String def = new IsomorphismSelector().defaults.get(kind);
-            System.out.println(this.settings.getValue(key, def)); // Default value in case it has never been saved and loads null? Better way?
-            isoChanged = isoChanged || !this.mySettingsPane.getIso(key).equals(this.settings.getValue(key));
+            isoChanged = isoChanged || !this.mySettingsPane.getIso(key).equals(this.settings.getValue(key, def)); // Default value in case it has never been saved and loads null? Better way?
         }
         return buildChanged || autoChanged || pathChanged || isoChanged;
     }
