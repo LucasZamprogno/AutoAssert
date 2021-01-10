@@ -5,14 +5,14 @@ import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectUtil;
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertKind;
-import com.lucasaz.intellij.AssertionGeneration.assertions.IsomorphismSelector;
+import com.lucasaz.intellij.AssertionGeneration.assertions.Category;
+import com.lucasaz.intellij.AssertionGeneration.assertions.CategoryManager;
 import com.lucasaz.intellij.AssertionGeneration.util.Util;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,46 +21,14 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
     public static final String BUILD_ALL_KEY = "AssertionGenerationBuildAllKey";
     public static final String AUTO_CONFIG_KEY = "AssertionGenerationAutoConfigKey";
     public static final String PATH_KEY = "AssertionGenerationTsconfigPathKey";
-    public static final String NULL_KEY = "AssertionGenerationNullIsoKey";
-    public static final String UNDEFINED_KEY = "AssertionGenerationUndefIsoKey";
-    public static final String EQULITY_KEY = "AssertionGenerationEqualIsoKey";
-    public static final String DEEP_EQULITY_KEY = "AssertionGenerationDeepEqualIsoKey";
-    public static final String LENGTH_KEY = "AssertionGenerationLengthIsoKey";
-    public static final String TYPE_KEY = "AssertionGenerationTypeIsoKey";
-    public static final String BOOL_KEY = "AssertionGenerationBoolIsoKey";
-    public static final String[] ISO_KEYS = {NULL_KEY, UNDEFINED_KEY, EQULITY_KEY,
-                                            DEEP_EQULITY_KEY, LENGTH_KEY, TYPE_KEY, BOOL_KEY};
-
-    public static AssertKind keyToAssertKind(String key) {
-        switch(key) {
-            case AssertionGenerationSettingsConfigurable.NULL_KEY:
-                return AssertKind.NULL;
-            case AssertionGenerationSettingsConfigurable.UNDEFINED_KEY:
-                return AssertKind.UNDEFINED;
-            case AssertionGenerationSettingsConfigurable.EQULITY_KEY:
-                return AssertKind.EQUAL;
-            case AssertionGenerationSettingsConfigurable.DEEP_EQULITY_KEY:
-                return AssertKind.DEEP_EQUAL;
-            case AssertionGenerationSettingsConfigurable.LENGTH_KEY:
-                return AssertKind.LENGTH;
-            case AssertionGenerationSettingsConfigurable.TYPE_KEY:
-                return AssertKind.TYPE;
-            case AssertionGenerationSettingsConfigurable.BOOL_KEY:
-                return AssertKind.BOOL;
-            default:
-                return AssertKind.NULL; // Should never happen
-        }
-    }
 
     public static Map<AssertKind, String> getSelectedIsos(PropertiesComponent settings) {
         HashMap<AssertKind, String> map = new HashMap<>();
-        map.put(AssertKind.NULL, settings.getValue(NULL_KEY));
-        map.put(AssertKind.UNDEFINED, settings.getValue(UNDEFINED_KEY));
-        map.put(AssertKind.EQUAL, settings.getValue(EQULITY_KEY));
-        map.put(AssertKind.DEEP_EQUAL, settings.getValue(DEEP_EQULITY_KEY));
-        map.put(AssertKind.LENGTH, settings.getValue(LENGTH_KEY));
-        map.put(AssertKind.TYPE, settings.getValue(TYPE_KEY));
-        map.put(AssertKind.BOOL, settings.getValue(BOOL_KEY));
+        for (Category category : CategoryManager.getConfigurableCategories()) {
+            AssertKind kind = category.getKind();
+            String catStorageKey = category.getStoageKey();
+            map.put(kind, settings.getValue(catStorageKey));
+        }
         return map;
     }
 
@@ -89,17 +57,18 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
         if (mySettingsPane == null) {
             mySettingsPane = new AssertionGenerationSettingsForm();
             String pathSelected = this.settings.getValue(PATH_KEY, "");
-            List<String> isoSelected = new ArrayList<>();
-            for (String key : AssertionGenerationSettingsConfigurable.ISO_KEYS) {
-                AssertKind kind = AssertionGenerationSettingsConfigurable.keyToAssertKind(key);
-                String def = new IsomorphismSelector().defaults.get(kind);
-                isoSelected.add(this.settings.getValue(key, def));
+            for (Category category : CategoryManager.getConfigurableCategories()) {
+                JComboBox<String> jComboBox = this.mySettingsPane.getJComboBox(category.getKind());
+                String catStorageKey = category.getStoageKey();
+                String defaultIso = category.getDefaultIsomorphism().getTemplate();
+                String loadedValue = this.settings.getValue(catStorageKey, defaultIso);
+                category.initializePassedJComboBox(jComboBox, loadedValue);
             }
             boolean build = this.settings.getBoolean(BUILD_ALL_KEY);
             boolean auto = this.settings.getBoolean(AUTO_CONFIG_KEY);
             final Project project = ProjectUtil.guessCurrentProject(mySettingsPane.getPanel()); // Spooky
             List<String> tsconfigPaths = Util.findAllTsconfigInProject(project);
-            mySettingsPane.setAll(tsconfigPaths, pathSelected, isoSelected, build, auto);
+            mySettingsPane.setAll(tsconfigPaths, pathSelected, build, auto);
             mySettingsPane.setListeners();
         }
         reset(); // I don't know what this does
@@ -112,10 +81,13 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
         boolean autoChanged = !(this.mySettingsPane.getAuto() == this.settings.getBoolean(AUTO_CONFIG_KEY));
         boolean pathChanged = !this.mySettingsPane.getPath().equals(this.settings.getValue(PATH_KEY));
         boolean isoChanged = false;
-        for (String key : AssertionGenerationSettingsConfigurable.ISO_KEYS) {
-            AssertKind kind = AssertionGenerationSettingsConfigurable.keyToAssertKind(key); // TODO Extract?
-            String def = new IsomorphismSelector().defaults.get(kind);
-            isoChanged = isoChanged || !this.mySettingsPane.getIso(key).equals(this.settings.getValue(key, def)); // Default value in case it has never been saved and loads null? Better way?
+        for (Category category : CategoryManager.getConfigurableCategories()) {
+            AssertKind kind = category.getKind();
+            String catStorageKey = category.getStoageKey();
+            String defaultIso = category.getDefaultIsomorphism().getTemplate();
+            String current = this.mySettingsPane.getIso(kind);
+            String prev = this.settings.getValue(catStorageKey, defaultIso); // Default value in case it has never been saved and loads null? Better way?
+            isoChanged = isoChanged || !current.equals(prev); // Minor inefficiency in not breaking but eh.
         }
         return buildChanged || autoChanged || pathChanged || isoChanged;
     }
@@ -125,8 +97,10 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
         this.settings.setValue(BUILD_ALL_KEY, mySettingsPane.getBuild());
         this.settings.setValue(AUTO_CONFIG_KEY, mySettingsPane.getAuto());
         this.settings.setValue(PATH_KEY, mySettingsPane.getPath());
-        for (String key : AssertionGenerationSettingsConfigurable.ISO_KEYS) {
-            this.settings.setValue(key, mySettingsPane.getIso(key));
+        for (Category category : CategoryManager.getConfigurableCategories()) {
+            AssertKind kind = category.getKind();
+            String catStorageKey = category.getStoageKey();
+            this.settings.setValue(catStorageKey, mySettingsPane.getIso(kind));
         }
     }
 }
