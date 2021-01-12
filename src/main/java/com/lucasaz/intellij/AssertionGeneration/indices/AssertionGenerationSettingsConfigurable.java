@@ -4,18 +4,34 @@ import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectUtil;
+import com.lucasaz.intellij.AssertionGeneration.assertions.AssertKind;
+import com.lucasaz.intellij.AssertionGeneration.assertions.Category;
+import com.lucasaz.intellij.AssertionGeneration.assertions.CategoryManager;
 import com.lucasaz.intellij.AssertionGeneration.util.Util;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AssertionGenerationSettingsConfigurable implements SearchableConfigurable {
     public static final String BUILD_ALL_KEY = "AssertionGenerationBuildAllKey";
     public static final String AUTO_CONFIG_KEY = "AssertionGenerationAutoConfigKey";
     public static final String PATH_KEY = "AssertionGenerationTsconfigPathKey";
+
+    public static Map<AssertKind, String> getSelectedIsos(PropertiesComponent settings) {
+        HashMap<AssertKind, String> map = new HashMap<>();
+        for (Category category : CategoryManager.getConfigurableCategories()) {
+            AssertKind kind = category.getKind();
+            String catStorageKey = category.getStoageKey();
+            map.put(kind, settings.getValue(catStorageKey));
+        }
+        return map;
+    }
+
     private AssertionGenerationSettingsForm mySettingsPane;
     private PropertiesComponent settings;
 
@@ -40,12 +56,19 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
     public JComponent createComponent() {
         if (mySettingsPane == null) {
             mySettingsPane = new AssertionGenerationSettingsForm();
-            String selected = this.settings.getValue(PATH_KEY, "");
+            String pathSelected = this.settings.getValue(PATH_KEY, "");
+            for (Category category : CategoryManager.getConfigurableCategories()) {
+                JComboBox<String> jComboBox = this.mySettingsPane.getJComboBox(category.getKind());
+                String catStorageKey = category.getStoageKey();
+                String defaultIso = category.getDefaultIsomorphism().getTemplate();
+                String loadedValue = this.settings.getValue(catStorageKey, defaultIso);
+                category.initializePassedJComboBox(jComboBox, loadedValue);
+            }
             boolean build = this.settings.getBoolean(BUILD_ALL_KEY);
             boolean auto = this.settings.getBoolean(AUTO_CONFIG_KEY);
             final Project project = ProjectUtil.guessCurrentProject(mySettingsPane.getPanel()); // Spooky
             List<String> tsconfigPaths = Util.findAllTsconfigInProject(project);
-            mySettingsPane.setAll(tsconfigPaths, selected, build, auto);
+            mySettingsPane.setAll(tsconfigPaths, pathSelected, build, auto);
             mySettingsPane.setListeners();
         }
         reset(); // I don't know what this does
@@ -57,7 +80,16 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
         boolean buildChanged = !(this.mySettingsPane.getBuild() == this.settings.getBoolean(BUILD_ALL_KEY));
         boolean autoChanged = !(this.mySettingsPane.getAuto() == this.settings.getBoolean(AUTO_CONFIG_KEY));
         boolean pathChanged = !this.mySettingsPane.getPath().equals(this.settings.getValue(PATH_KEY));
-        return buildChanged || autoChanged || pathChanged;
+        boolean isoChanged = false;
+        for (Category category : CategoryManager.getConfigurableCategories()) {
+            AssertKind kind = category.getKind();
+            String catStorageKey = category.getStoageKey();
+            String defaultIso = category.getDefaultIsomorphism().getTemplate();
+            String current = this.mySettingsPane.getIso(kind);
+            String prev = this.settings.getValue(catStorageKey, defaultIso); // Default value in case it has never been saved and loads null? Better way?
+            isoChanged = isoChanged || !current.equals(prev); // Minor inefficiency in not breaking but eh.
+        }
+        return buildChanged || autoChanged || pathChanged || isoChanged;
     }
 
     @Override
@@ -65,5 +97,10 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
         this.settings.setValue(BUILD_ALL_KEY, mySettingsPane.getBuild());
         this.settings.setValue(AUTO_CONFIG_KEY, mySettingsPane.getAuto());
         this.settings.setValue(PATH_KEY, mySettingsPane.getPath());
+        for (Category category : CategoryManager.getConfigurableCategories()) {
+            AssertKind kind = category.getKind();
+            String catStorageKey = category.getStoageKey();
+            this.settings.setValue(catStorageKey, mySettingsPane.getIso(kind));
+        }
     }
 }

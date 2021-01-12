@@ -1,30 +1,32 @@
 package com.lucasaz.intellij.AssertionGeneration.assertions;
 
-public class IsomorphismSelector {
+import java.util.HashMap;
+import java.util.Map;
 
-    public static String getAssertion(AssertKind kind, String LHS, String RHS) {
-        switch (kind) {
-            case NULL:
-                return "expect(" + LHS + ").to.be.null;";
-            case UNDEFINED:
-                return "expect(" + LHS + ").to.be.undefined;";
-            case EXIST:
-                return "expect(" + LHS + ").to.exist;";
-            case THROW:
-                return "expect(" + LHS + ").to.throw;";
-            case NOT_THROW:
-                return "expect(" + LHS + ").to.not.throw;";
-            case EQUAL:
-                return "expect(" + LHS + ").to.equal(" + RHS + ");";
-            case DEEP_EQUAL:
-                return "expect(" + LHS + ").to.deep.equal(" + RHS + ");";
-            case LENGTH:
-                return "expect(" + LHS + ").to.have.length(" + RHS + ");";
-            case TYPE:
-                return "expect(" + LHS + ").to.be.a(" + RHS + ");";
-            case BOOL:
-                return "expect(" + LHS + ").to.be." + RHS + ";";
+public class IsomorphismSelector {
+    public Map<AssertKind, String> defaults;
+    private Map<AssertKind, Isomorphism> isoMap;
+
+    public IsomorphismSelector() {
+        Map<AssertKind, Isomorphism> genMap = new HashMap<>();
+        for (Category category : CategoryManager.getAllCategories()) {
+            genMap.put(category.getKind(), category.getDefaultIsomorphism());
         }
-        return "// Wat";
+        this.isoMap = genMap;
+    }
+
+    public IsomorphismSelector(Map<AssertKind, String> isomorphisms) {
+        this();
+        // Replace defaults
+        for (Map.Entry<AssertKind,String> entry : isomorphisms.entrySet()) {
+            AssertKind kind = entry.getKey();
+            String template = entry.getValue();
+            Isomorphism iso = CategoryManager.getCategory(kind).getIsomorphism(template);
+            this.isoMap.put(kind, iso);
+        }
+    }
+
+    public String getAssertion(AssertKind kind, String LHS, String RHS) {
+        return this.isoMap.get(kind).fillInAssertion(LHS, RHS);
     }
 }

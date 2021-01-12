@@ -1,5 +1,7 @@
 package com.lucasaz.intellij.AssertionGeneration.indices;
 
+import com.lucasaz.intellij.AssertionGeneration.assertions.AssertKind;
+
 import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.util.List;
@@ -9,6 +11,14 @@ public class AssertionGenerationSettingsForm {
     private JCheckBox buildAll;
     private JCheckBox autoSelect;
     private JComboBox<String> tsconfigDropdown;
+    private JPanel AssertionConfiguration;
+    private JComboBox<String> nullIsomorphism;
+    private JComboBox<String> undefinedIsomorphism;
+    private JComboBox<String> equalityIsomorphism;
+    private JComboBox<String> deepEqualityIsomorphism;
+    private JComboBox<String> lengthIsomorphism;
+    private JComboBox<String> typeIsomorphism;
+    private JComboBox<String> booleanIsomorphism;
 
     public String getPath() {
         return this.tsconfigDropdown.getSelectedItem().toString();
@@ -20,6 +30,30 @@ public class AssertionGenerationSettingsForm {
 
     public boolean getAuto() {
         return this.autoSelect.isSelected();
+    }
+
+    public String getIso(AssertKind kind) {
+        return this.getJComboBox(kind).getSelectedItem().toString();
+    }
+    public JComboBox<String> getJComboBox(AssertKind kind) {
+        switch(kind) {
+            case NULL:
+                return this.nullIsomorphism;
+            case UNDEFINED:
+                return this.undefinedIsomorphism;
+            case EQUAL:
+                return this.equalityIsomorphism;
+            case DEEP_EQUAL:
+                return this.deepEqualityIsomorphism;
+            case LENGTH:
+                return this.lengthIsomorphism;
+            case TYPE:
+                return this.typeIsomorphism;
+            case BOOL:
+                return this.booleanIsomorphism;
+            default:
+                return this.nullIsomorphism; // Should never happen
+        }
     }
 
     public JComponent getPanel() {

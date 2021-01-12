@@ -1,9 +1,13 @@
 package com.lucasaz.intellij.AssertionGeneration.services;
 
+import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.application.NonBlockingReadAction;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.util.concurrency.NonUrgentExecutor;
+import com.lucasaz.intellij.AssertionGeneration.assertions.AssertKind;
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertionSelector;
+import com.lucasaz.intellij.AssertionGeneration.assertions.IsomorphismSelector;
+import com.lucasaz.intellij.AssertionGeneration.indices.AssertionGenerationSettingsConfigurable;
 import com.lucasaz.intellij.AssertionGeneration.util.Util;
 import com.lucasaz.intellij.AssertionGeneration.dto.Selected;
 import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
@@ -12,6 +16,7 @@ import org.json.JSONObject;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FileWatcher extends Thread implements Runnable {
@@ -19,21 +24,23 @@ public class FileWatcher extends Thread implements Runnable {
     private Path path;
     private AtomicBoolean stop;
     private WatchService watcher;
+    private PropertiesComponent settings;
     private static FileWatcher instance = null;
 
-    public static FileWatcher getInstance(Selected selected, WatchService watcher) {
+    public static FileWatcher getInstance(Selected selected, WatchService watcher, PropertiesComponent settings) {
         if (FileWatcher.instance != null) {
             instance.stopRequeue();
         }
-        FileWatcher.instance = new FileWatcher(selected, watcher);
+        FileWatcher.instance = new FileWatcher(selected, watcher, settings);
         return FileWatcher.instance;
     }
 
-    private FileWatcher(Selected selected, WatchService watcher) {
+    private FileWatcher(Selected selected, WatchService watcher, PropertiesComponent settings) {
             this.selected = selected;
             this.path = Paths.get(selected.getTsFilePath());
             this.stop = new AtomicBoolean(false);
             this.watcher = watcher;
+            this.settings = settings;
     }
 
     public void stopRequeue() { stop.set(true); }
@@ -107,7 +114,9 @@ public class FileWatcher extends Thread implements Runnable {
     private String makeFinalFile(JSONObject observed) throws PluginException {
         String varName = this.selected.getSelected();
         String whitespace = this.selected.getWhitespace();
-        String assertions = AssertionSelector.getAllAssertions(observed, varName, whitespace);
+        Map<AssertKind, String> map = AssertionGenerationSettingsConfigurable.getSelectedIsos(this.settings);
+        IsomorphismSelector isoSelector = new IsomorphismSelector(map);
+        String assertions = AssertionSelector.getAllAssertions(observed, varName, whitespace, isoSelector);
         return Util.spliceInto(this.selected.getOriginalFile(), assertions, this.selected.getLine());
     }
 }

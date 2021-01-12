@@ -70,7 +70,7 @@ public class AssertionGeneration extends AnAction
         try {
             WatchService watcher = FileSystems.getDefault().newWatchService();
             Paths.get(this.selected.getTsFilePath()).getParent().register(watcher, StandardWatchEventKinds.ENTRY_CREATE);
-            this.fw = FileWatcher.getInstance(this.selected, watcher);
+            this.fw = FileWatcher.getInstance(this.selected, watcher, this.settings);
         } catch (IOException err) {
             System.err.println("Failed to setup file watcher");
             System.err.println(err.getMessage());
