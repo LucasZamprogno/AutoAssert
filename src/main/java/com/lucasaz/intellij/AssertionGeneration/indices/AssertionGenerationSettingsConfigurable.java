@@ -13,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +73,7 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
             mySettingsPane.setAll(tsconfigPaths, pathSelected, build, auto);
             mySettingsPane.setListeners();
         }
+        this.mySettingsPane.getScanButton().addActionListener(this.createScanActionListener());
         reset(); // I don't know what this does
         return mySettingsPane.getPanel();
     }
@@ -102,5 +105,15 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
             String catStorageKey = category.getStoageKey();
             this.settings.setValue(catStorageKey, mySettingsPane.getIso(kind));
         }
+    }
+
+    private ActionListener createScanActionListener() {
+        // TODO
+        return new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("Braxton's code goes here");
+            }
+        };
     }
 }
