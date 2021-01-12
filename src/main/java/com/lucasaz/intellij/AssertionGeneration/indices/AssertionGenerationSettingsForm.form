@@ -167,6 +167,14 @@
           <toolTipText value="Some assertions can have the same functionality written in different ways. You can change how assertions appear here."/>
         </properties>
       </component>
+      <component id="2fee5" class="javax.swing.JButton" binding="scanProjectButton">
+        <constraints>
+          <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Button"/>
+        </properties>
+      </component>
     </children>
   </grid>
 </form>

@@ -19,6 +19,7 @@ public class AssertionGenerationSettingsForm {
     private JComboBox<String> lengthIsomorphism;
     private JComboBox<String> typeIsomorphism;
     private JComboBox<String> booleanIsomorphism;
+    private JButton scanProjectButton;
 
     public String getPath() {
         return this.tsconfigDropdown.getSelectedItem().toString();
@@ -30,6 +31,10 @@ public class AssertionGenerationSettingsForm {
 
     public boolean getAuto() {
         return this.autoSelect.isSelected();
+    }
+
+    public JButton getScanButton() {
+        return this.scanProjectButton;
     }
 
     public String getIso(AssertKind kind) {
