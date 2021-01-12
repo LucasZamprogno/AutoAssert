@@ -70,7 +70,7 @@ public class Assertion {
 		PropertyAccess propertyAccess = this.getPropertyAccesses().get(0);
 		if (propertyAccess.getText().equals("expect") && propertyAccess instanceof Call) {
 			Call call = (Call) propertyAccess;
-			return (call.getArguments().size() > 0 && call.getText().equals("expect"));
+			return call.getArguments().size() > 0;
 		} else if (propertyAccess.getText().equals("assert")) {
 			for (PropertyAccess pa : getPropertyAccesses()) {
 				if (pa instanceof Call) {

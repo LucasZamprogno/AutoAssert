@@ -153,8 +153,8 @@ public class EqualitySpecifier {
     private static boolean checkForArgumentsWhere(Assertion assertion, Map<Target, V8Object> mapToV8Nodes, PoorMansFirstOrderFunction function) {
         List<Target> targets = assertion.getAllArguments();
         for (Target argument : targets) {
-            V8Object rhsV8Argument = mapToV8Nodes.get(argument);
-            if (function.call(rhsV8Argument)) {
+            V8Object v8Argument = mapToV8Nodes.get(argument);
+            if (function.call(v8Argument)) {
                 return true;
             }
         }
@@ -191,6 +191,7 @@ public class EqualitySpecifier {
     private static boolean isEqualityNull(Assertion assertion, Map<Target, V8Object> mapToV8Nodes) {
         /*
         expect(res).to.equal(null);            ✅
+        expect(null).to.equal(res);            ✅
         expect(res === null).to.equal(true);   ❌
         expect(null == res).to.equal(false);   ❌
         expect(res.equals(null)).to.be(false); ❌
@@ -220,7 +221,7 @@ public class EqualitySpecifier {
                 @Override
                 boolean call(V8Object v8Target) {
                     // targetHasInSubtree(v8Target, "TypeOfKeyword");
-                    return isExactKind(v8Target, "TypeOfExpression") || targetHasKindInBinop(v8Target, "TypeOfExpression");
+                    return isExactKind(v8Target, "UndefinedKeyword") || (isExactKind(v8Target, "Identifier") && "undefined".equals(v8Target.get("text")));
                 }
             });
         } else if (assertion.toString().contains("undefined")) {
@@ -228,8 +229,7 @@ public class EqualitySpecifier {
             return checkForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
                 @Override
                 boolean call(V8Object v8Target) {
-                    return isExactKind(v8Target, "Identifier") &&
-                            v8Target.executeJSFunction("getText").equals("undefined");
+                    return targetHasKindInBinop(v8Target, "UndefinedKeyword") || (isExactKind(v8Target, "Identifier") && "undefined".equals(v8Target.get("text")));
                 }
             });
         } else {
@@ -240,6 +240,7 @@ public class EqualitySpecifier {
     private static boolean isEqualityBoolean(Assertion assertion, Map<Target, V8Object> mapToV8Nodes) {
         /*
         expect(res).to.equal(true);           ✅
+        expect(true).to.equal(res);           ✅
         expect(res === false).to.equal(true); ❌
         */
         return checkForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
