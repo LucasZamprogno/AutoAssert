@@ -220,7 +220,7 @@ public class EqualitySpecifier {
             return checkForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
                 @Override
                 boolean call(V8Object v8Target) {
-                    // targetHasInSubtree(v8Target, "TypeOfKeyword");
+                    // TODO this does not work as intended
                     return isExactKind(v8Target, "UndefinedKeyword") || (isExactKind(v8Target, "Identifier") && "undefined".equals(v8Target.get("text")));
                 }
             });
@@ -229,6 +229,7 @@ public class EqualitySpecifier {
             return checkForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
                 @Override
                 boolean call(V8Object v8Target) {
+                    // TODO may incur false negatives bc undefined is sometimes parsed as an identifier (in the binop)
                     return targetHasKindInBinop(v8Target, "UndefinedKeyword") || (isExactKind(v8Target, "Identifier") && "undefined".equals(v8Target.get("text")));
                 }
             });
