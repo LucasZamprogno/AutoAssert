@@ -26,11 +26,13 @@ public class Assertion {
 			}
 		}
 		if (propertyAccess.getText().equals("assert")) {
-			if (getPropertyAccesses().size() > 0 && getPropertyAccesses().get(1) instanceof Call) {
-				Call call = (Call) getPropertyAccesses().get(1);
-				return call.getArguments().get(0);
+			for (PropertyAccess pa : getPropertyAccesses()) {
+				if (pa instanceof Call) {
+					return ((Call) pa).getArguments().get(0);
+				}
 			}
 		}
+		System.out.println("WARNING: getLHS shout NOT have been called on " + toString());
 		return null;
 	}
 
@@ -46,7 +48,7 @@ public class Assertion {
 				}
 			}
 		} else if (propertyAccess.getText().equals("assert")) {
-			if (getPropertyAccesses().size() > 0 && getPropertyAccesses().get(1) instanceof Call) {
+			if (getPropertyAccesses().size() > 1 && getPropertyAccesses().get(1) instanceof Call) {
 				Call call = (Call) getPropertyAccesses().get(1);
 				for (int i = 1; i < call.getArguments().size(); i = i + 1) {
 					targets.add(call.getArguments().get(i));
@@ -56,17 +58,26 @@ public class Assertion {
 		return targets;
 	}
 
+	public List<Target> getAllArguments() {
+		List<Target> targets = getRHS();
+		if (isExpectingValue()) {
+			targets.add(0, getLHS());
+		}
+		return targets;
+	}
+
 	public boolean isExpectingValue() {
-		if (getPropertyAccesses().get(0) instanceof Call) {
-			Call call = (Call) getPropertyAccesses().get(0);
+		PropertyAccess propertyAccess = this.getPropertyAccesses().get(0);
+		if (propertyAccess.getText().equals("expect") && propertyAccess instanceof Call) {
+			Call call = (Call) propertyAccess;
 			return (call.getArguments().size() > 0 && call.getText().equals("expect"));
-		} else if (getPropertyAccesses().get(0).getText().equals("assert")) {
-			if (getPropertyAccesses().size() > 0 && getPropertyAccesses().get(1) instanceof Call) {
-				Call call = (Call) getPropertyAccesses().get(1);
-				return call.getArguments().size() > 0;
-			} else {
-				return false;
+		} else if (propertyAccess.getText().equals("assert")) {
+			for (PropertyAccess pa : getPropertyAccesses()) {
+				if (pa instanceof Call) {
+					return ((Call) pa).getArguments().size() > 0;
+				}
 			}
+			return false;
 		} else {
 			return false;
 		}

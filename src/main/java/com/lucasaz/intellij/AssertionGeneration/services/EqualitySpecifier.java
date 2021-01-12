@@ -6,6 +6,7 @@ import com.lucasaz.intellij.AssertionGeneration.model.assertion.*;
 import com.lucasaz.intellij.AssertionGeneration.visitors.impl.TypeScriptVisitor;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -22,8 +23,10 @@ public class EqualitySpecifier {
             "equals",
             "toStrictEqual",
             "equalIgnoreSpaces",
+            "notStrictEqual",
             "notDeepStrictEqual",
-            "notStrictEqual"
+            "notDeepEqual",
+            "toBe"
     );
 
     public static boolean isInEqualityCategory(Assertion assertion) {
@@ -74,33 +77,23 @@ public class EqualitySpecifier {
         return hasIt;
     }
 
-//    private static boolean targetHasInSubtree(V8Object target, String kind) {
-//        return targetHasInSubtree(target, Collections.singletonList(kind));
-//    }
-//
-//    private static boolean targetHasInSubtree(V8Object target, List<String> kinds) {
-//        // TODO don't use this
-//        final boolean[] hasIt = {false};
-//        try {
-//            TypeScriptVisitor typeScriptVisitor = new TypeScriptVisitor() {
-//                @Override
-//                public void visit(V8Object node) {
-//                    for (String kind : kinds) {
-//                        if (isKind(node, kind)) {
-//                            hasIt[0] = true;
-//                            return;
-//                        }
-//                    }
-//                    super.visit(node);
-//                }
-//            };
-//            typeScriptVisitor.visit(target);
-//            typeScriptVisitor.close();
-//        } catch (Exception exception) {
-//            // Do nothing
-//        }
-//        return hasIt[0];
-//    }
+    private static boolean targetIsEmpty(V8Object v8Target) {
+        final boolean[] isEmpty = {false};
+        try {
+            TypeScriptVisitor typeScriptVisitor = new TypeScriptVisitor();
+            if (typeScriptVisitor.isKind(v8Target, "StringLiteral")) {
+                isEmpty[0] = v8Target.getString("text").equals("");
+            } else if (typeScriptVisitor.isKind(v8Target, "ObjectLiteralExpression")) {
+                isEmpty[0] = v8Target.getObject("properties").getInteger("length") == 0;
+            } else if (typeScriptVisitor.isKind(v8Target, "ArrayLiteralExpression")) {
+                isEmpty[0] = v8Target.getObject("elements").getInteger("length") == 0;
+            }
+            typeScriptVisitor.close();
+        } catch (Exception exception) {
+            // Do nothing
+        }
+        return isEmpty[0];
+    }
 
     private static boolean targetHasPropertyWithNameIn(V8Object target, List<String> propertyNames) {
         final boolean[] inPropertyNames = {false};
@@ -109,8 +102,8 @@ public class EqualitySpecifier {
                 @Override
                 protected void visitPropertyAccessExpression(V8Object propertyAccessExpression) {
                     String keyword = propertyAccessExpression
-                                .getObject("name")
-                                .executeStringFunction("getText", new V8Array(ts.getRuntime()));
+                            .getObject("name")
+                            .executeStringFunction("getText", new V8Array(ts.getRuntime()));
                     if (propertyNames.contains(keyword)) {
                         inPropertyNames[0] = true;
                     } else {
@@ -157,18 +150,8 @@ public class EqualitySpecifier {
         return isInCallTypes[0];
     }
 
-    private static boolean checkLHSForArgumentsWhere(Assertion assertion, Map<Target, V8Object> mapToV8Nodes, PoorMansFirstOrderFunction function) {
-        boolean lhsHasCallWithKeywords = false;
-        if (assertion.isExpectingValue()) {
-            Target lhsArgument = assertion.getLHS();
-            V8Object lhsV8Argument = mapToV8Nodes.get(lhsArgument);
-            lhsHasCallWithKeywords = function.call(lhsV8Argument);
-        }
-        return lhsHasCallWithKeywords;
-    }
-
-    private static boolean checkRHSForArgumentsWhere(Assertion assertion, Map<Target, V8Object> mapToV8Nodes, PoorMansFirstOrderFunction function) {
-        List<Target> targets = assertion.getRHS();
+    private static boolean checkForArgumentsWhere(Assertion assertion, Map<Target, V8Object> mapToV8Nodes, PoorMansFirstOrderFunction function) {
+        List<Target> targets = assertion.getAllArguments();
         for (Target argument : targets) {
             V8Object rhsV8Argument = mapToV8Nodes.get(argument);
             if (function.call(rhsV8Argument)) {
@@ -194,9 +177,10 @@ public class EqualitySpecifier {
         final List<String> inclusionKeywords = Arrays.asList(
                 "includes",
                 "contains",
-                "has"
+                "has",
+                "indexOf"
         );
-        return checkLHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
+        return checkForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
             @Override
             boolean call(V8Object v8Target) {
                 return targetHasCallWithNameIn(v8Target, inclusionKeywords);
@@ -207,17 +191,11 @@ public class EqualitySpecifier {
     private static boolean isEqualityNull(Assertion assertion, Map<Target, V8Object> mapToV8Nodes) {
         /*
         expect(res).to.equal(null);            ✅
-        expect(null).to.equal(res);            ✅
         expect(res === null).to.equal(true);   ❌
         expect(null == res).to.equal(false);   ❌
         expect(res.equals(null)).to.be(false); ❌
         */
-        return checkRHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
-            @Override
-            boolean call(V8Object v8Target) {
-                return isExactKind(v8Target, "NullKeyword");
-            }
-        }) || checkLHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
+        return checkForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
             @Override
             boolean call(V8Object v8Target) {
                 return isExactKind(v8Target, "NullKeyword");
@@ -230,33 +208,28 @@ public class EqualitySpecifier {
         expect(typeof res === "undefined").to.equal(true); ✅
         expect(typeof res == "undefined").to.equal(true);  ✅
         expect(typeof res).to.equal("undefined");          ✅
-        expect(res === undefined).to.equal(true);          ✅
-        expect(res == undefined).to.equal(true);           ✅
         expect(res).to.deep.equal(undefined);              ✅
+        expect(res === undefined).to.equal(true);          ❌
+        expect(res == undefined).to.equal(true);           ❌
         expect(res.equals(undefined)).to.be(false);        ❌
         */
 
         if (assertion.toString().contains("\"undefined\"")) {
             // check for a typeof
-            return checkLHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
+            return checkForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
                 @Override
                 boolean call(V8Object v8Target) {
                     // targetHasInSubtree(v8Target, "TypeOfKeyword");
-                    return isExactKind(v8Target, "TypeOfKeyword") || targetHasKindInBinop(v8Target, "TypeOfKeyword");
+                    return isExactKind(v8Target, "TypeOfExpression") || targetHasKindInBinop(v8Target, "TypeOfExpression");
                 }
             });
         } else if (assertion.toString().contains("undefined")) {
             // check for binop or deep equal
-            return checkRHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
+            return checkForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
                 @Override
                 boolean call(V8Object v8Target) {
-                    return isExactKind(v8Target, "UndefinedKeyword") || (isExactKind(v8Target, "Identifier") && "undefined".equals(v8Target.get("text")));
-                }
-            }) || checkLHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
-                @Override
-                boolean call(V8Object v8Target) {
-                    // return isExactKind(v8Target, "BinaryExpression") && targetHasInSubtree(v8Target, "UndefinedKeyword");
-                    return targetHasKindInBinop(v8Target, "UndefinedKeyword") || (isExactKind(v8Target, "Identifier") && "undefined".equals(v8Target.get("text")));
+                    return isExactKind(v8Target, "Identifier") &&
+                            v8Target.executeJSFunction("getText").equals("undefined");
                 }
             });
         } else {
@@ -267,15 +240,9 @@ public class EqualitySpecifier {
     private static boolean isEqualityBoolean(Assertion assertion, Map<Target, V8Object> mapToV8Nodes) {
         /*
         expect(res).to.equal(true);           ✅
-        expect(true).to.equal(res);           ✅
         expect(res === false).to.equal(true); ❌
         */
-        return checkRHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
-            @Override
-            boolean call(V8Object v8Target) {
-                return isExactKind(v8Target, "TrueKeyword") || isExactKind(v8Target, "FalseKeyword");
-            }
-        }) || checkLHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
+        return checkForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
             @Override
             boolean call(V8Object v8Target) {
                 return isExactKind(v8Target, "TrueKeyword") || isExactKind(v8Target, "FalseKeyword");
@@ -288,11 +255,11 @@ public class EqualitySpecifier {
         expect(typeof res).to.equal("string");          ✅
         expect(typeof res === "string").to.equal(true); ✅
         */
-        return checkLHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
+        return checkForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
             @Override
             boolean call(V8Object v8Target) {
                 // return targetHasInSubtree(v8Target, "TypeOfKeyword");
-                return isExactKind(v8Target, "TypeOfKeyword") || targetHasKindInBinop(v8Target, "TypeOfKeyword");
+                return isExactKind(v8Target, "TypeOfExpression") || targetHasKindInBinop(v8Target, "TypeOfExpression");
             }
         });
     }
@@ -302,21 +269,20 @@ public class EqualitySpecifier {
         expect(res instanceof Class).to.equal(true);           ✅
         expect(res instanceof Class === false).to.equal(true); ✅
         */
-        return checkLHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
+        return checkForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
             @Override
             boolean call(V8Object v8Target) {
                 // return targetHasInSubtree(v8Target, "InstanceOfKeyword");
-                return isExactKind(v8Target, "InstanceOfKeyword") || targetHasKindInBinop(v8Target, "InstanceOfKeyword");
+                return targetIsBinopWithOpIn(v8Target, Collections.singletonList("InstanceOfKeyword"));
             }
         });
     }
 
     private static boolean isEqualityNumeric(Assertion assertion, Map<Target, V8Object> mapToV8Nodes) {
         // < > <= >= =>
-        checkLHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
+        return checkForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
             @Override
             boolean call(V8Object v8Target) {
-                // return targetHasInSubtree(v8Target, Arrays.asList(...));
                 return targetIsBinopWithOpIn(v8Target, Arrays.asList(
                         "LessThanToken",
                         "GreaterThanToken",
@@ -326,7 +292,6 @@ public class EqualitySpecifier {
                 ));
             }
         });
-        return false;
     }
 
     private static boolean isEqualityTruthiness(Assertion assertion, Map<Target, V8Object> mapToV8Nodes) {
@@ -341,12 +306,22 @@ public class EqualitySpecifier {
                 "size",
                 "length"
         );
-        return checkLHSForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
+        return checkForArgumentsWhere(assertion, mapToV8Nodes, new PoorMansFirstOrderFunction() {
             @Override
             boolean call(V8Object v8Target) {
-                return targetHasPropertyWithNameIn(v8Target, lengthKeywords);
+                return targetHasPropertyWithNameIn(v8Target, lengthKeywords) || targetIsEmpty(v8Target);
             }
         });
+    }
+
+    private static boolean isEqualityCall(Assertion assertion, Map<Target, V8Object> mapToV8Nodes) {
+        List<Target> arguments = assertion.getAllArguments();
+        for (Target argument : arguments) {
+            if (argument.getText().endsWith(".callCount")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // REQUIRES: assertion is an equality assertion
@@ -370,6 +345,8 @@ public class EqualitySpecifier {
         equalityAssertion.setEqTruthiness(isEqualityTruthiness(assertion, mapToV8Nodes));
         // length
         equalityAssertion.setEqLength(isEqualityLength(assertion, mapToV8Nodes));
+        // calls
+        equalityAssertion.setEqCall(isEqualityCall(assertion, mapToV8Nodes));
 
         return equalityAssertion;
     }

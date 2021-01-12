@@ -19,6 +19,7 @@ public class EqualityAssertion extends Assertion {
     boolean eqNumeric = false;
     boolean eqTruthiness = false;
     boolean eqLength = false;
+    boolean eqCall = false;
 
     public EqualityAssertion(List<PropertyAccess> propertyAccesses, String filePath, int line) {
         super(propertyAccesses, filePath, line);
@@ -54,6 +55,9 @@ public class EqualityAssertion extends Assertion {
         }
         if (eqLength) {
             equalityArray.put("LENGTH");
+        }
+        if (eqCall) {
+            equalityArray.put("CALL");
         }
 
         json.put("equality", equalityArray);
