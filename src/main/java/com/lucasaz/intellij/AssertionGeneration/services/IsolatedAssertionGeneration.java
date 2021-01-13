@@ -43,7 +43,8 @@ public class IsolatedAssertionGeneration {
             // Make assertions + final file
             String whitespace = IsolatedAssertionGeneration.getWhitespaceFromLine(testFile, lineNum);
             JSONObject resObj = new JSONObject(result);
-            String assertions = AssertionSelector.getAllAssertions(resObj, selected, whitespace);
+            boolean verbose = true;
+            String assertions = AssertionSelector.getAllAssertions(resObj, selected, whitespace, verbose);
             task.removeVolume(id);
             // Probably a better way to do this but that's for a time when we have time
             String val;
