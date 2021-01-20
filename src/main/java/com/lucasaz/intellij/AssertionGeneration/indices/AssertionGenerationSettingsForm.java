@@ -40,6 +40,7 @@ public class AssertionGenerationSettingsForm {
     public String getIso(AssertKind kind) {
         return this.getJComboBox(kind).getSelectedItem().toString();
     }
+
     public JComboBox<String> getJComboBox(AssertKind kind) {
         switch(kind) {
             case NULL:
@@ -83,11 +84,12 @@ public class AssertionGenerationSettingsForm {
         }
     }
 
-    public void setListeners() {
+    public void setListeners(ActionListener buttonScanListener) {
         AssertionGenerationSettingsForm form = this;
         ActionListener al = e -> form.setEnabledStates();
         this.buildAll.addActionListener(al);
         this.autoSelect.addActionListener(al);
+        this.scanProjectButton.addActionListener(buttonScanListener);
     }
 
     public void setupDropdown(List<String> configs, String selected) {
