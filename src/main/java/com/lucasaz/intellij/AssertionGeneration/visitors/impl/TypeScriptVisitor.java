@@ -2,9 +2,9 @@ package com.lucasaz.intellij.AssertionGeneration.visitors.impl;
 
 import com.eclipsesource.v8.*;
 import com.eclipsesource.v8.utils.MemoryManager;
+import com.lucasaz.intellij.AssertionGeneration.services.TypeScript;
 import com.lucasaz.intellij.AssertionGeneration.visitors.IVisitor;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,9 +16,9 @@ public class TypeScriptVisitor implements IVisitor<String> {
 
 	private static final Map<String, Integer> syntaxKindCache = new HashMap<String, Integer>();
 
-	public TypeScriptVisitor() throws IOException {
-		ts = TSSingleton.getInstance().getTS();
-		scope = new MemoryManager(TSSingleton.getInstance().getRuntime());
+	public TypeScriptVisitor() {
+		ts = TypeScript.getInstance().getTS();
+		scope = new MemoryManager(TypeScript.getInstance().getRuntime());
 		syntaxKind = ts.getObject("SyntaxKind");
 	}
 

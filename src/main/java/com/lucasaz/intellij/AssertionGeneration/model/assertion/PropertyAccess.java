@@ -6,7 +6,6 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-@Builder
 public class PropertyAccess {
 	String text;
 

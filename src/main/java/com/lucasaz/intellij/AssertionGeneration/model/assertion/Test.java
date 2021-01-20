@@ -1,7 +1,11 @@
 package com.lucasaz.intellij.AssertionGeneration.model.assertion;
 
+import com.eclipsesource.v8.V8Object;
+import com.lucasaz.intellij.AssertionGeneration.services.TypeScript;
+import com.lucasaz.intellij.AssertionGeneration.visitors.impl.TypeScriptVisitor;
 import lombok.Getter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,11 +16,44 @@ public class Test {
     int line;
     List<List<Assertion>> assertionBlocks;
 
-    public Test(List<Assertion> assertions, String filePath, int line) {
-        this.assertions = assertions;
-        this.filePath = filePath;
-        this.line = line;
-        this.assertionBlocks = createAssertionBlocks(assertions);
+    public Test(String filePath, V8Object testNode, V8Object sourceFile) throws Exception {
+        if (isTest(testNode)) {
+            this.filePath = filePath;
+            this.line = TypeScript.getInstance().getLine(testNode, sourceFile);
+            this.assertions = new ArrayList<>();
+            TypeScriptVisitor testVisitor = new TypeScriptVisitor() {
+                @Override
+                protected void visitExpressionStatement(V8Object expressionStatement) {
+                    try {
+                        Assertion assertion = new Assertion(filePath, expressionStatement, sourceFile);
+                        assertions.add(assertion);
+                    } catch (Exception e) {
+                        // Do nothing
+                    }
+                    visitChildren(expressionStatement);
+                }
+            };
+            testVisitor.visit(testNode);
+            testVisitor.close();
+            this.assertionBlocks = createAssertionBlocks(assertions);
+        } else {
+            throw new Exception("Was not a test");
+        }
+    }
+
+    private boolean isTest(V8Object expressionStatement) {
+        TypeScriptVisitor typeScriptVisitor = new TypeScriptVisitor();
+        String expression = TypeScript.getInstance().getNodeText(expressionStatement);
+        if (expression.startsWith("it")) {
+            // _might_ be a test. check first that we have a call expression
+            if (typeScriptVisitor.isKind(expressionStatement.getObject("expression"), "CallExpression")) {
+                V8Object identifier = expressionStatement.getObject("expression").getObject("expression");
+                return typeScriptVisitor.isKind(identifier, "Identifier") && identifier.executeJSFunction("getText").equals("it");
+            } else {
+                return false;
+            }
+        }
+        return false;
     }
 
     private List<List<Assertion>> createAssertionBlocks(List<Assertion> assertions) {

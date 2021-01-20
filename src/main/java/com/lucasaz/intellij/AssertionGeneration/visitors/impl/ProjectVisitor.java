@@ -1,5 +1,6 @@
-package com.lucasaz.intellij.AssertionGeneration.visitors;
+package com.lucasaz.intellij.AssertionGeneration.visitors.impl;
 
+import com.lucasaz.intellij.AssertionGeneration.visitors.IVisitor;
 import lombok.AllArgsConstructor;
 
 import java.io.IOException;

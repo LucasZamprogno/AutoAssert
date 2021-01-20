@@ -1,27 +1,18 @@
 package com.lucasaz.intellij.AssertionGeneration.execution;
 
-import com.eclipsesource.v8.V8Array;
-import com.eclipsesource.v8.V8Object;
 import com.lucasaz.intellij.AssertionGeneration.exceptions.PluginException;
 import com.lucasaz.intellij.AssertionGeneration.model.AssertionGenerationResponse;
 import com.lucasaz.intellij.AssertionGeneration.model.DynamicAnalysisResult;
 import com.lucasaz.intellij.AssertionGeneration.model.assertion.*;
-import com.lucasaz.intellij.AssertionGeneration.model.task.Dredd;
-import com.lucasaz.intellij.AssertionGeneration.model.task.Nock;
-import com.lucasaz.intellij.AssertionGeneration.model.task.Typeset;
 import com.lucasaz.intellij.AssertionGeneration.model.task.Task;
-import com.lucasaz.intellij.AssertionGeneration.services.EqualitySpecifier;
 import com.lucasaz.intellij.AssertionGeneration.services.IsolatedAssertionGeneration;
 import com.lucasaz.intellij.AssertionGeneration.util.Util;
-import com.lucasaz.intellij.AssertionGeneration.visitors.ProjectVisitor;
-import com.lucasaz.intellij.AssertionGeneration.visitors.impl.TypeScriptVisitor;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -57,7 +48,10 @@ public class MineAssertions {
 				System.out.println("Getting assertions for " + repoUrl);
 				BufferedWriter bw = createEqualityAssertionsFile(repoUrl);
 				Path repoPath = cloneRepo(repoUrl);
-				Repo repo = mineRepo(repoPath, repoUrl);
+				Repo repo = new Repo(repoUrl, repoPath);
+				if (DYNAMIC_RUN) {
+					mineRepo(repo);
+				}
 				saveAssertions(repo, repoUrl, bw);
 				deleteRepo(repoPath);
 				closeEqualityAssertionsFile(bw);
@@ -124,365 +118,54 @@ public class MineAssertions {
 		}
 	}
 
-	private static Repo mineRepo(Path repo, String name) throws Exception {
-		try {
-			List<Assertion> orphanAssertions = new ArrayList<>();
-			List<Test> tests = new ArrayList<>();
+	private static void mineRepo(Repo repo) {
+		for (TestFile testFile : repo.getFiles()) {
+			for (Test test : testFile.getTests()) {
+				for (List<Assertion> block : test.getAssertionBlocks()) {
+					Assertion firstAssertion = block.get(0);
+					int line = firstAssertion.getLine() - 1;
+					Target assertingOn = firstAssertion.getLHS();
+					String root = assertingOn.getText();
+					File file = new File(testFile.getFilePath().toString());
+					String fileName = file.getName();
 
-			ProjectVisitor projectVisitor = new ProjectVisitor(null) {
-				@Override
-				protected boolean shouldVisitFile(Path filePath) {
-					String filePathString = filePath.toString();
-					boolean shouldVisit = super.shouldVisitFile(filePath) &&
-							(filePathString.endsWith(".ts") || filePathString.endsWith(".js"))  &&
-							(filePathString.contains("test") || filePathString.contains("spec"));
-					if (shouldVisit) {
-						System.out.println(filePathString);
-					}
-					return shouldVisit;
-				}
-
-				@Override
-				protected boolean shouldVisitDirectory(Path dirPath) {
-					return super.shouldVisitDirectory(dirPath) && !dirPath.toString().contains("node_modules") && !dirPath.toString().contains(".git");
-				}
-
-				@Override
-				protected void visitFile(Path filePath) {
-					List<Test> testsInThisFile = new ArrayList<>();
+					String testDirPath = "." + file.getParent().replace(repo.toString(), "");
+					String testFileRelativePath = testDirPath.replace("./temp/", "");
+					String repoName = repo.toString().replace("./temp/", "");
+					Task task = new Task(repoName, testDirPath.replace(".", ""), fileName);
+					String newAssertions;
+					boolean error;
+					boolean differentBetweenRuns = false;
+					String errorMessage;
 					try {
-						TypeScriptVisitor sourceVisitor = new TypeScriptVisitor() {
-							private V8Object sourceFile;
-
-							@Override
-							public void visit(String source) {
-								sourceFile = getSource(source);
-								visit(sourceFile);
-							}
-
-							@Override
-							public void close() {
-								sourceFile.release();
-								super.close();
-							}
-
-							private void visitExpressionImpl(V8Object expressionStatement) {
-								try {
-									if (isTest(expressionStatement)) {
-										Test test = getTest(expressionStatement, filePath.toString(), sourceFile);
-										tests.add(test);
-										testsInThisFile.add(test);
-										return; // Don't continue with children
-									} else if (isAssertion(expressionStatement)) {
-										orphanAssertions.add(getAssertion(expressionStatement, filePath.toString(), sourceFile));
-										return; // Don't continue with children
-									}
-								} catch (Exception e) {
-									System.out.println(e.toString());
-									// Do nothing
-								}
-								visitChildren(expressionStatement);
-							}
-
-							@Override
-							protected void visitExpressionStatement(V8Object expressionStatement) {
-								visitExpressionImpl(expressionStatement);
-							}
-
-							private String getText(V8Object node) {
-								V8Array arguments = new V8Array(ts.getRuntime());
-								String text = node.executeStringFunction("getText", arguments);
-								arguments.release();
-								return text;
-							}
-
-							private boolean isAssertion(V8Object expressionStatement) {
-								String expression = getText(expressionStatement);
-								if (expression.startsWith("expect") || expression.startsWith("should") || expression.startsWith("assert")) {
-									// _might_ be an expect. check the first identifier to see if it's an expect
-									V8Object currentObject = expressionStatement;
-									while (currentObject.contains("expression")) {
-										currentObject = currentObject.getObject("expression");
-									}
-
-									String identifier = currentObject
-											.executeStringFunction("getText", new V8Array(ts.getRuntime()));
-									return isKind(currentObject, "Identifier") &&
-											(identifier.equals("expect") || identifier.equals("should") || identifier.equals("assert"));
-								} else {
-									return false;
-								}
-							}
-
-							private boolean isTest(V8Object expressionStatement) {
-								String expression = getText(expressionStatement);
-								if (expression.startsWith("it")) {
-									// _might_ be a test. check first that we have a call expression
-									if (isKind(expressionStatement.getObject("expression"), "CallExpression")) {
-										V8Object identifier = expressionStatement.getObject("expression").getObject("expression");
-										return isKind(identifier, "Identifier") && identifier.executeJSFunction("getText").equals("it");
-									} else {
-										return false;
-									}
-								}
-								return false;
-							}
-
-							private Assertion getAssertion(V8Object expressionStatement, String filePath, V8Object sourceFile) throws IOException {
-								List<PropertyAccess> propertyAccesses = new ArrayList<>();
-								Map<Target, V8Object> mapToV8Node = new HashMap<>();
-
-								int start = expressionStatement.executeIntegerFunction("getStart", new V8Array(ts.getRuntime()));
-								V8Object lineAndCharacter = sourceFile
-										.executeObjectFunction("getLineAndCharacterOfPosition", new V8Array(ts.getRuntime()).push(start));
-								int line = lineAndCharacter.getInteger("line");
-
-								TypeScriptVisitor expressionVisitor = new TypeScriptVisitor() {
-									@Override
-									protected void visitCallExpression(V8Object callExpression) {
-										try {
-											List<Target> arguments = new ArrayList<>();
-
-											V8Array v8ArgumentArray = callExpression.getArray("arguments");
-											int numArguments = v8ArgumentArray.length();
-											for (int i = 0; i < numArguments; i++) {
-												V8Object v8Node = v8ArgumentArray.getObject(i);
-												Target target = getTarget(v8Node);
-												mapToV8Node.put(target, v8Node);
-												arguments.add(target);
-											}
-											// if expression is an identifier, we must be done
-											V8Object parentExpression = callExpression.getObject("expression");
-											if (isKind(parentExpression, "Identifier")) {
-												String identifier = getText(parentExpression);
-												propertyAccesses.add(0, new Call(identifier, arguments));
-											} else if (isKind(parentExpression, "PropertyAccessExpression")) {
-												String propertyName = getText(parentExpression.getObject("name"));
-												propertyAccesses.add(0, new Call(propertyName, arguments));
-												visit(parentExpression.getObject("expression"));
-											}
-										} catch (IOException ioe) {
-											System.out.println("Fatal error! Could not reinit typescript!");
-										}
-									}
-
-									@Override
-									protected void visitPropertyAccessExpression(V8Object propertyAccessExpression) {
-										propertyAccesses.add(0, new PropertyAccess(getText(propertyAccessExpression.getObject("name"))));
-										visit(propertyAccessExpression.getObject("expression"));
-									}
-
-									@Override
-									protected void visitIdentifier(V8Object identifier) {
-										propertyAccesses.add(0, new PropertyAccess(getText(identifier)));
-									}
-								};
-								expressionVisitor.visit(expressionStatement);
-
-								Assertion assertion = new Assertion(propertyAccesses, filePath, line);
-								if (EqualitySpecifier.isInEqualityCategory(assertion)) {
-									assertion = EqualitySpecifier.getEqualityDetails(assertion, mapToV8Node);
-								}
-
-								// this line must be after the last use of the map
-								// or else it will release all the objects inside
-								expressionVisitor.close();
-
-								return assertion;
-							}
-
-							private Test getTest(V8Object expressionStatement, String filePath, V8Object sourceFile) throws IOException {
-								List<Assertion> testAssertions = new ArrayList<>();
-								int start = expressionStatement.executeIntegerFunction("getStart", new V8Array(ts.getRuntime()));
-								V8Object lineAndCharacter = sourceFile
-										.executeObjectFunction("getLineAndCharacterOfPosition", new V8Array(ts.getRuntime()).push(start));
-								int line = lineAndCharacter.getInteger("line");
-								TypeScriptVisitor testVisitor = new TypeScriptVisitor() {
-									@Override
-									protected void visitExpressionStatement(V8Object expressionStatement) {
-										try {
-											if (isAssertion(expressionStatement)) {
-												testAssertions.add(getAssertion(expressionStatement, filePath, sourceFile));
-											}
-										} catch (Exception e) {
-											System.out.println(e.toString());
-											// Do nothing
-										}
-										visitChildren(expressionStatement);
-									}
-								};
-								testVisitor.visit(expressionStatement);
-								testVisitor.close();
-								return new Test(testAssertions, filePath, line);
-							}
-
-							private Target getTarget(V8Object object) throws IOException {
-								String text = getText(object);
-								final boolean[] includesPropertyAccess = {false};
-								final boolean[] includesCallExpression = {false};
-								final boolean[] includesIdentifier = {false};
-								final String[] root = {null};
-								final int[] depth = {0};
-								TypeScriptVisitor targetVisitor = new TypeScriptVisitor() {
-									@Override
-									protected void visitPropertyAccessExpression(V8Object propertyAccessExpression) {
-										includesPropertyAccess[0] = true;
-										depth[0]++;
-										visit(propertyAccessExpression.getObject("expression"));
-									}
-
-									@Override
-									protected void visitElementAccessExpression(V8Object elementAccessExpression) {
-										includesPropertyAccess[0] = true;
-										depth[0]++;
-										visit(elementAccessExpression.getObject("expression"));
-									}
-
-									@Override
-									protected void visitCallExpression(V8Object callExpression) {
-										includesCallExpression[0] = true;
-										depth[0]++;
-										visit(callExpression.getObject("expression"));
-									}
-
-									@Override
-									protected void visitIdentifier(V8Object identifier) {
-										includesIdentifier[0] = true;
-										root[0] = getText(identifier);
-									}
-								};
-								boolean isIdentifier = isKind(object, "Identifier") || isKind(object, "ThisKeyword"); // this ????
-								boolean isExpression = isExpression(object);
-								boolean isLiteral = isLiteral(object);
-								boolean isCall = isCall(object);
-								targetVisitor.visit(object);
-								targetVisitor.close();
-								if (isExpression || isLiteral || includesCallExpression[0]) {
-									depth[0] = -1;
-								}
-								return new Target(text, includesPropertyAccess[0], includesCallExpression[0], includesIdentifier[0], isExpression, isIdentifier, isLiteral, isCall, depth[0], root[0]);
-							}
-
-							private boolean isLiteral(V8Object literal) {
-								return isKind(literal, "NullKeyword") ||
-										isKind(literal, "UndefinedKeyword") ||
-										isKind(literal, "TrueKeyword") ||
-										isKind(literal, "FalseKeyword") ||
-										isKind(literal, "NumericLiteral") ||
-										isKind(literal, "BigIntLiteral") ||
-										isKind(literal, "StringLiteral") ||
-										isKind(literal, "JsxText") ||
-										isKind(literal, "JsxTextAllWhiteSpaces") ||
-										isKind(literal, "RegularExpressionLiteral") ||
-										isKind(literal, "NoSubstitutionTemplateLiteral") ||
-										isKind(literal, "TypeLiteral") || // Should this be here?
-										isKind(literal, "ArrayLiteralExpression") ||
-										isKind(literal, "ObjectLiteralExpression");
-							}
-
-							private boolean isExpression(V8Object expression) {
-								return // isKind(expression, "ArrayLiteralExpression") || // ??
-										// isKind(expression, "ObjectLiteralExpression") || // ??
-										// isKind(expression, "PropertyAccessExpression") || // ??
-										// isKind(expression, "ElementAccessExpression") || // ??
-										// isKind(expression, "CallExpression") || // ??
-										isKind(expression, "NewExpression") ||
-										isKind(expression, "TaggedTemplateExpression") ||
-										isKind(expression, "TypeAssertionExpression") ||
-										isKind(expression, "ParenthesizedExpression") ||
-										isKind(expression, "FunctionExpression") ||
-										isKind(expression, "ArrowFunction") ||
-										isKind(expression, "DeleteExpression") ||
-										isKind(expression, "TypeOfExpression") ||
-										isKind(expression, "VoidExpression") ||
-										isKind(expression, "AwaitExpression") ||
-										isKind(expression, "PrefixUnaryExpression") ||
-										isKind(expression, "PostfixUnaryExpression") ||
-										isKind(expression, "BinaryExpression") ||
-										isKind(expression, "ConditionalExpression") ||
-										isKind(expression, "TemplateExpression") ||
-										isKind(expression, "YieldExpression") ||
-										isKind(expression, "SpreadElement") ||
-										isKind(expression, "ClassExpression") ||
-										isKind(expression, "OmittedExpression") ||
-										isKind(expression, "ExpressionWithTypeArguments") || // ??
-										isKind(expression, "AsExpression") || // ??
-										isKind(expression, "NonNullExpression") ||
-										isKind(expression, "SyntheticExpression") ||
-										isKind(expression, "ExpressionStatement");
-							}
-
-							private boolean isCall(V8Object call) {
-								return isKind(call, "CallExpression");
-							}
-						};
-						String source = new String(Files.readAllBytes(filePath));
-						source = source.replaceAll("\n[\n\t\r ]*\n", "\n");
-						sourceVisitor.visit(source);
-						sourceVisitor.close();
-
-						if (!DYNAMIC_RUN) {
-							return;
-						}
-
-						for (Test test : testsInThisFile) {
-							for (List<Assertion> block : test.getAssertionBlocks()) {
-								Assertion firstAssertion = block.get(0);
-								int line = firstAssertion.getLine() - 1;
-								Target assertingOn = firstAssertion.getLHS();
-								String root = assertingOn.getText();
-								File file = new File(filePath.toString());
-								String fileName = file.getName();
-
-								String testDirPath = "." + file.getParent().replace(repo.toString(), "");
-								String testFileRelativePath = testDirPath.replace("./temp/", "");
-								String repoName = repo.toString().replace("./temp/", "");
-								Task task = new Task(repoName, testDirPath.replace(".", ""), fileName);
-								String newAssertions;
-								boolean error;
-								boolean differentBetweenRuns = false;
-								String errorMessage;
-								try {
-									generateCounter++;
-									AssertionGenerationResponse response = IsolatedAssertionGeneration.generateAssertions(line, root, source, task);
-									newAssertions = response.getGeneratedAssertions();
-									differentBetweenRuns = response.isDifferentBetweenRuns();
-									error = response.isFailed();
-									errorMessage = response.getReason();
-								} catch (PluginException pluginException) {
-									newAssertions = "";
-									error = true;
-									errorMessage = pluginException.getMessage();
-								}
-								DynamicAnalysisResult result = new DynamicAnalysisResult(
-										block,
-										testFileRelativePath,
-										differentBetweenRuns,
-										error,
-										newAssertions,
-										errorMessage
-								);
-								if (!error) {
-									saveResultToFile(repo.toString().replace("./temp/", ""), result);
-								}
-							}
-						}
-					} catch (IOException ioException) {
-						System.out.println("Error visiting file's source.");
-						ioException.printStackTrace();
+						generateCounter++;
+						AssertionGenerationResponse response = IsolatedAssertionGeneration.generateAssertions(line, root, testFile.getSource(), task);
+						newAssertions = response.getGeneratedAssertions();
+						differentBetweenRuns = response.isDifferentBetweenRuns();
+						error = response.isFailed();
+						errorMessage = response.getReason();
+					} catch (PluginException pluginException) {
+						newAssertions = "";
+						error = true;
+						errorMessage = pluginException.getMessage();
+					}
+					DynamicAnalysisResult result = new DynamicAnalysisResult(
+							block,
+							testFileRelativePath,
+							differentBetweenRuns,
+							error,
+							newAssertions,
+							errorMessage
+					);
+					if (!error) {
+						saveResultToFile(repo.toString().replace("./temp/", ""), result);
 					}
 				}
-			};
-			projectVisitor.visit(repo);
-			projectVisitor.close();
-			return new Repo(name, orphanAssertions, tests);
-		} catch (Exception exception) {
-			System.out.println("Failed to mine assertions");
-			throw new Exception();
+			}
 		}
 	}
 
-	private static void saveAssertionData(List<Assertion> assertions, BufferedWriter bufferedWriter) {
+	private static void saveAssertionData(Collection<Assertion> assertions, BufferedWriter bufferedWriter) {
 		for (Assertion assertion : assertions) {
 			for (PropertyAccess propertyAccess : assertion.getPropertyAccesses()) {
 				if (!propertyCounts.containsKey(propertyAccess.getText())) {
@@ -633,7 +316,7 @@ public class MineAssertions {
 		}
 	}
 
-	private static void addToSet(List<Assertion> assertions, Set<String> set) {
+	private static void addToSet(Collection<Assertion> assertions, Set<String> set) {
 		for (Assertion assertion : assertions) {
 			for (PropertyAccess propertyAccess : assertion.getPropertyAccesses()) {
 				set.add(propertyAccess.getText());

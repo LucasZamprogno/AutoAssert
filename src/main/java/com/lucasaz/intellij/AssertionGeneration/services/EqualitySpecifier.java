@@ -351,27 +351,28 @@ public class EqualitySpecifier {
 
     // REQUIRES: assertion is an equality assertion
     public static EqualityAssertion getEqualityDetails(Assertion assertion, Map<Target, V8Object> mapToV8Nodes) {
-        EqualityAssertion equalityAssertion = new EqualityAssertion(assertion.getPropertyAccesses(), assertion.getFilePath(), assertion.getLine());
-        // Inclusion
-        equalityAssertion.setEqInclusion(isEqualityInclusion(assertion, mapToV8Nodes));
-        // Null
-        equalityAssertion.setEqNull(isEqualityNull(assertion, mapToV8Nodes));
-        // Undefined
-        equalityAssertion.setEqUndefined(isEqualityUndefined(assertion, mapToV8Nodes));
-        // Boolean
-        equalityAssertion.setEqBoolean(isEqualityBoolean(assertion, mapToV8Nodes));
-        // Typeof
-        equalityAssertion.setEqTypeof(isEqualityTypeof(assertion, mapToV8Nodes));
-        // Instanceof
-        equalityAssertion.setEqInstanceOf(isEqualityInstanceOf(assertion, mapToV8Nodes));
-        // Numeric
-        equalityAssertion.setEqNumeric(isEqualityNumeric(assertion, mapToV8Nodes));
-        // truthiness
-        equalityAssertion.setEqTruthiness(isEqualityTruthiness(assertion, mapToV8Nodes));
-        // length
-        equalityAssertion.setEqLength(isEqualityLength(assertion, mapToV8Nodes));
-
-        return equalityAssertion;
+//        EqualityAssertion equalityAssertion = new EqualityAssertion(assertion.getPropertyAccesses(), assertion.getFilePath(), assertion.getLine());
+//        // Inclusion
+//        equalityAssertion.setEqInclusion(isEqualityInclusion(assertion, mapToV8Nodes));
+//        // Null
+//        equalityAssertion.setEqNull(isEqualityNull(assertion, mapToV8Nodes));
+//        // Undefined
+//        equalityAssertion.setEqUndefined(isEqualityUndefined(assertion, mapToV8Nodes));
+//        // Boolean
+//        equalityAssertion.setEqBoolean(isEqualityBoolean(assertion, mapToV8Nodes));
+//        // Typeof
+//        equalityAssertion.setEqTypeof(isEqualityTypeof(assertion, mapToV8Nodes));
+//        // Instanceof
+//        equalityAssertion.setEqInstanceOf(isEqualityInstanceOf(assertion, mapToV8Nodes));
+//        // Numeric
+//        equalityAssertion.setEqNumeric(isEqualityNumeric(assertion, mapToV8Nodes));
+//        // truthiness
+//        equalityAssertion.setEqTruthiness(isEqualityTruthiness(assertion, mapToV8Nodes));
+//        // length
+//        equalityAssertion.setEqLength(isEqualityLength(assertion, mapToV8Nodes));
+//
+//        return equalityAssertion;
+        return null; // TODO
     }
 
     private static abstract class PoorMansFirstOrderFunction {
