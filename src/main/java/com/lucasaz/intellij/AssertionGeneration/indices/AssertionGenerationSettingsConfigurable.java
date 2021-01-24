@@ -7,6 +7,8 @@ import com.intellij.openapi.project.ProjectUtil;
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertKind;
 import com.lucasaz.intellij.AssertionGeneration.assertions.Category;
 import com.lucasaz.intellij.AssertionGeneration.assertions.CategoryManager;
+import com.lucasaz.intellij.AssertionGeneration.model.assertion.Assertion;
+import com.lucasaz.intellij.AssertionGeneration.model.assertion.Repo;
 import com.lucasaz.intellij.AssertionGeneration.util.Util;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -15,6 +17,9 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +34,7 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
         HashMap<AssertKind, String> map = new HashMap<>();
         for (Category category : CategoryManager.getConfigurableCategories()) {
             AssertKind kind = category.getKind();
-            String catStorageKey = category.getStoageKey();
+            String catStorageKey = category.getStorageKey();
             map.put(kind, settings.getValue(catStorageKey));
         }
         return map;
@@ -62,7 +67,7 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
             String pathSelected = this.settings.getValue(PATH_KEY, "");
             for (Category category : CategoryManager.getConfigurableCategories()) {
                 JComboBox<String> jComboBox = this.mySettingsPane.getJComboBox(category.getKind());
-                String catStorageKey = category.getStoageKey();
+                String catStorageKey = category.getStorageKey();
                 String defaultIso = category.getDefaultIsomorphism().getTemplate();
                 String loadedValue = this.settings.getValue(catStorageKey, defaultIso);
                 category.initializePassedJComboBox(jComboBox, loadedValue);
@@ -72,10 +77,10 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
             boolean verbose = this.settings.getBoolean(VERBOSE_KEY);
             final Project project = ProjectUtil.guessCurrentProject(mySettingsPane.getPanel()); // Spooky
             List<String> tsconfigPaths = Util.findAllTsconfigInProject(project);
+            ActionListener scanListener = this.createScanActionListener();
             mySettingsPane.setAll(tsconfigPaths, pathSelected, build, auto, verbose);
-            mySettingsPane.setListeners();
+            mySettingsPane.setListeners(scanListener);
         }
-        this.mySettingsPane.getScanButton().addActionListener(this.createScanActionListener());
         reset(); // I don't know what this does
         return mySettingsPane.getPanel();
     }
@@ -89,7 +94,7 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
         boolean isoChanged = false;
         for (Category category : CategoryManager.getConfigurableCategories()) {
             AssertKind kind = category.getKind();
-            String catStorageKey = category.getStoageKey();
+            String catStorageKey = category.getStorageKey();
             String defaultIso = category.getDefaultIsomorphism().getTemplate();
             String current = this.mySettingsPane.getIso(kind);
             String prev = this.settings.getValue(catStorageKey, defaultIso); // Default value in case it has never been saved and loads null? Better way?
@@ -106,17 +111,31 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
         this.settings.setValue(PATH_KEY, mySettingsPane.getPath());
         for (Category category : CategoryManager.getConfigurableCategories()) {
             AssertKind kind = category.getKind();
-            String catStorageKey = category.getStoageKey();
+            String catStorageKey = category.getStorageKey();
             this.settings.setValue(catStorageKey, mySettingsPane.getIso(kind));
         }
     }
 
     private ActionListener createScanActionListener() {
+        AssertionGenerationSettingsConfigurable source = this;
         // TODO
         return new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("Braxton's code goes here");
+                try {
+                    final Project project = ProjectUtil.guessCurrentProject(mySettingsPane.getPanel()); // Spooky
+                    String basePathString = project.getBasePath();
+                    Path basePath = Paths.get(basePathString);
+                    Repo repo = new Repo("foo", basePath);
+                    Map<AssertKind, String> map = repo.getIsoMap();
+                    for (Category cat : CategoryManager.getConfigurableCategories()) {
+                        AssertKind kind = cat.getKind();
+                        String template = map.get(kind);
+                        source.mySettingsPane.getJComboBox(kind).setSelectedItem(template);
+                    }
+                } catch (Exception err) {
+                    err.printStackTrace();
+                }
             }
         };
     }

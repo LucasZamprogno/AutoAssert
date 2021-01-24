@@ -1,10 +1,13 @@
 package com.lucasaz.intellij.AssertionGeneration.model.assertion;
 
+import com.lucasaz.intellij.AssertionGeneration.assertions.AssertKind;
 import com.lucasaz.intellij.AssertionGeneration.visitors.impl.ProjectVisitor;
 import lombok.Getter;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @Getter
@@ -71,5 +74,24 @@ public class Repo {
         }
         assertions.addAll(getOrphanAssertions());
         return assertions;
+    }
+
+    public Map<AssertKind, String> getIsoMap() {
+        Set<Assertion> assertions = new HashSet<>();
+        for (TestFile file : files) {
+            for (Test test : file.getTests()) {
+                assertions.addAll(test.getAssertions());
+            }
+        }
+        assertions.addAll(getOrphanAssertions());
+        Map<AssertKind, String> map = new HashMap<>();
+        map.put(AssertKind.NULL, "expect(LHS).to.be.null;");
+        map.put(AssertKind.UNDEFINED, "expect(LHS).to.equal(undefined);");
+        map.put(AssertKind.EQUAL, "expect(LHS).to.equal(RHS);");
+        map.put(AssertKind.DEEP_EQUAL, "expect(LHS).to.eql(RHS);");
+        map.put(AssertKind.LENGTH, "expect(LHS).to.have.length(RHS);");
+        map.put(AssertKind.TYPE, "expect(LHS).to.be.an(RHS);");
+        map.put(AssertKind.BOOL, "expect(LHS).to.be.RHS;");
+        return map;
     }
 }

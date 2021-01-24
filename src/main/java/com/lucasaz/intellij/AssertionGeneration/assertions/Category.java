@@ -39,7 +39,7 @@ public class Category {
         return this.kind;
     }
 
-    public String getStoageKey() {
+    public String getStorageKey() {
         return this.kind.storageKey;
     }
 }
