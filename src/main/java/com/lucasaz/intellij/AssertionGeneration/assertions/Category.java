@@ -1,8 +1,9 @@
 package com.lucasaz.intellij.AssertionGeneration.assertions;
 
+import com.lucasaz.intellij.AssertionGeneration.model.assertion.Assertion;
+
 import javax.swing.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Category {
     private final List<Isomorphism> isomorphisms = new ArrayList<>();
@@ -11,7 +12,13 @@ public class Category {
     public Category(AssertKind kind, String[] isomorphismTemplates) {
         this.kind = kind;
         for (String template : isomorphismTemplates) {
-            this.isomorphisms.add(new Isomorphism(template));
+            this.isomorphisms.add(new Isomorphism(template, new AssertionComparator() {
+                // TODO Just a stub
+                @Override
+                boolean match(Assertion assertion) {
+                    return false;
+                }
+            }));
         }
     }
 
@@ -41,5 +48,29 @@ public class Category {
 
     public String getStorageKey() {
         return this.kind.storageKey;
+    }
+
+    public Isomorphism calculatePopularIsomorphism(Collection<Assertion> assertions) {
+        Map<Isomorphism, Integer> isoCounts = new HashMap<>();
+
+        for (Assertion assertion : assertions) {
+            for (Isomorphism isomorphism : isomorphisms) {
+                if (!isoCounts.containsKey(isomorphism)) {
+                    isoCounts.put(isomorphism, 0);
+                }
+                if (isomorphism.matchesTemplate(assertion)) {
+                    isoCounts.put(isomorphism, isoCounts.get(isomorphism) + 1);
+                }
+            }
+        }
+
+        Map.Entry<Isomorphism, Integer> mostPopularSoFar = null;
+        for (Map.Entry<Isomorphism, Integer> entry : isoCounts.entrySet()) {
+            if (mostPopularSoFar == null || entry.getValue() > mostPopularSoFar.getValue()) {
+                mostPopularSoFar = entry;
+            }
+        }
+        assert mostPopularSoFar != null;
+        return mostPopularSoFar.getKey();
     }
 }

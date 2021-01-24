@@ -36,7 +36,6 @@ public class CategoryManager {
 
     public static Category getCategory(AssertKind kind) {
         switch(kind) {
-            case NULL: return CategoryManager.NULL;
             case UNDEFINED: return CategoryManager.UNDEFINED;
             case EXIST: return CategoryManager.EXIST;
             case THROW: return CategoryManager.THROW;

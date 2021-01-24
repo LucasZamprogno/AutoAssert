@@ -1,12 +1,16 @@
 package com.lucasaz.intellij.AssertionGeneration.assertions;
 
+import com.lucasaz.intellij.AssertionGeneration.model.assertion.Assertion;
+
 public class Isomorphism {
     private final String template;
     private final IsomorphismGenerator generator;
+    private final AssertionComparator comparator;
 
-    public Isomorphism(String template) {
+    public Isomorphism(String template, AssertionComparator comparator) {
         this.template = template;
         this.generator = IsomorphismGeneratorFactory.generatorFromString(template);
+        this.comparator = comparator;
     }
 
     public String fillInAssertion(String LHS, String RHS) {
@@ -15,5 +19,9 @@ public class Isomorphism {
 
     public String getTemplate() {
         return this.template;
+    }
+
+    public boolean matchesTemplate(Assertion assertion) {
+        return comparator.match(assertion);
     }
 }
