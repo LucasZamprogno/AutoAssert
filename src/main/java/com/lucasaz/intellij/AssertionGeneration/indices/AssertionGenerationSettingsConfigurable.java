@@ -125,6 +125,7 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
                 try {
                     final Project project = ProjectUtil.guessCurrentProject(mySettingsPane.getPanel()); // Spooky
                     String basePathString = project.getBasePath();
+                    assert basePathString != null;
                     Path basePath = Paths.get(basePathString);
                     Repo repo = new Repo("foo", basePath);
                     Map<AssertKind, String> map = repo.getIsoMap();
