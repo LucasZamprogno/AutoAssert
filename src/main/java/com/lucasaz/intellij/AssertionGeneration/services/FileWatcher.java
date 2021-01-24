@@ -114,9 +114,10 @@ public class FileWatcher extends Thread implements Runnable {
     private String makeFinalFile(JSONObject observed) throws PluginException {
         String varName = this.selected.getSelected();
         String whitespace = this.selected.getWhitespace();
+        boolean verbose = this.settings.getBoolean(AssertionGenerationSettingsConfigurable.VERBOSE_KEY);
         Map<AssertKind, String> map = AssertionGenerationSettingsConfigurable.getSelectedIsos(this.settings);
         IsomorphismSelector isoSelector = new IsomorphismSelector(map);
-        String assertions = AssertionSelector.getAllAssertions(observed, varName, whitespace, isoSelector);
+        String assertions = AssertionSelector.getAllAssertions(observed, varName, whitespace, verbose, isoSelector);
         return Util.spliceInto(this.selected.getOriginalFile(), assertions, this.selected.getLine());
     }
 }

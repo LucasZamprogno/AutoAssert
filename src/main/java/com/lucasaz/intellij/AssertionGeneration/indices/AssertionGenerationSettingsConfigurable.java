@@ -23,6 +23,7 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
     public static final String BUILD_ALL_KEY = "AssertionGenerationBuildAllKey";
     public static final String AUTO_CONFIG_KEY = "AssertionGenerationAutoConfigKey";
     public static final String PATH_KEY = "AssertionGenerationTsconfigPathKey";
+    public static final String VERBOSE_KEY = "AssertionGenerationVerboseKey";
 
     public static Map<AssertKind, String> getSelectedIsos(PropertiesComponent settings) {
         HashMap<AssertKind, String> map = new HashMap<>();
@@ -68,9 +69,10 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
             }
             boolean build = this.settings.getBoolean(BUILD_ALL_KEY);
             boolean auto = this.settings.getBoolean(AUTO_CONFIG_KEY);
+            boolean verbose = this.settings.getBoolean(VERBOSE_KEY);
             final Project project = ProjectUtil.guessCurrentProject(mySettingsPane.getPanel()); // Spooky
             List<String> tsconfigPaths = Util.findAllTsconfigInProject(project);
-            mySettingsPane.setAll(tsconfigPaths, pathSelected, build, auto);
+            mySettingsPane.setAll(tsconfigPaths, pathSelected, build, auto, verbose);
             mySettingsPane.setListeners();
         }
         this.mySettingsPane.getScanButton().addActionListener(this.createScanActionListener());
@@ -82,6 +84,7 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
     public boolean isModified() {
         boolean buildChanged = !(this.mySettingsPane.getBuild() == this.settings.getBoolean(BUILD_ALL_KEY));
         boolean autoChanged = !(this.mySettingsPane.getAuto() == this.settings.getBoolean(AUTO_CONFIG_KEY));
+        boolean verboseChanged = !(this.mySettingsPane.getVerbose() == this.settings.getBoolean(VERBOSE_KEY));
         boolean pathChanged = !this.mySettingsPane.getPath().equals(this.settings.getValue(PATH_KEY));
         boolean isoChanged = false;
         for (Category category : CategoryManager.getConfigurableCategories()) {
@@ -92,13 +95,14 @@ public class AssertionGenerationSettingsConfigurable implements SearchableConfig
             String prev = this.settings.getValue(catStorageKey, defaultIso); // Default value in case it has never been saved and loads null? Better way?
             isoChanged = isoChanged || !current.equals(prev); // Minor inefficiency in not breaking but eh.
         }
-        return buildChanged || autoChanged || pathChanged || isoChanged;
+        return buildChanged || autoChanged || pathChanged || verboseChanged || isoChanged;
     }
 
     @Override
     public void apply() {
         this.settings.setValue(BUILD_ALL_KEY, mySettingsPane.getBuild());
         this.settings.setValue(AUTO_CONFIG_KEY, mySettingsPane.getAuto());
+        this.settings.setValue(VERBOSE_KEY, mySettingsPane.getVerbose());
         this.settings.setValue(PATH_KEY, mySettingsPane.getPath());
         for (Category category : CategoryManager.getConfigurableCategories()) {
             AssertKind kind = category.getKind();
