@@ -8,11 +8,11 @@ import java.util.List;
 
 public class AssertionSelector {
 
-    public static String getAllAssertions(JSONObject observed, String name, String ws) {
-        return AssertionSelector.getAllAssertions(observed, name, ws, new IsomorphismSelector());
+    public static String getAllAssertions(JSONObject observed, String name, String ws, boolean verbose) {
+        return AssertionSelector.getAllAssertions(observed, name, ws, verbose, new IsomorphismSelector());
     }
 
-    public static String getAllAssertions(JSONObject observed, String name, String ws, IsomorphismSelector isoSelector) {
+    public static String getAllAssertions(JSONObject observed, String name, String ws, boolean verbose, IsomorphismSelector isoSelector) {
         String type = (String) observed.get("type");
         String typeQuoted = "\"" + type + "\"";
         String lsp = "\n"; // We'll leave this hardcoded for now. Other option is System.getProperty("line.separator");
@@ -23,32 +23,42 @@ public class AssertionSelector {
             case "boolean":
                 boolean bool = observed.getBoolean("value");
                 val = Boolean.toString(bool);
-                assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
-                assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
+                if (verbose) {
+                    assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
+                    assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
+                }
                 assertions.add(isoSelector.getAssertion(AssertKind.BOOL, name, val));
                 break;
             case "number":
                 val = observed.get("value").toString();
-                assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
-                assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
+                if (verbose) {
+                    assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
+                    assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
+                }
                 assertions.add(isoSelector.getAssertion(AssertKind.EQUAL, name, val));
                 break;
             case "string": // Only diff is the quotes in the deep equal
                 val = (String) observed.get("value");
                 val = "\"" + val + "\"";
-                assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
-                assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
+                if (verbose) {
+                    assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
+                    assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
+                }
                 assertions.add(isoSelector.getAssertion(AssertKind.EQUAL, name, val));
                 break;
             case "symbol":
                 val = (String) observed.get("value");
                 val = "\"" + val + "\"";
-                assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
-                assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
+                if (verbose) {
+                    assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
+                    assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
+                }
                 assertions.add(isoSelector.getAssertion(AssertKind.EQUAL, name + ".toString()", val));
                 break;
             case "function":
-                assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, null));
+                if (verbose) {
+                    assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, null));
+                }
                 assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
                 int numArgs = (int) observed.get("args");
                 if (numArgs == 0) {
@@ -70,33 +80,43 @@ public class AssertionSelector {
                 JSONArray arr = (JSONArray) observed.get("value");
                 val = arr.toString();
                 len = (int) observed.get("length");
-                assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
-                assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
-                assertions.add(isoSelector.getAssertion(AssertKind.LENGTH, name, String.valueOf(len)));
+                if (verbose) {
+                    assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
+                    assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
+                    assertions.add(isoSelector.getAssertion(AssertKind.LENGTH, name, String.valueOf(len)));
+                }
                 assertions.add(isoSelector.getAssertion(AssertKind.DEEP_EQUAL, name, val));
                 break;
             case "set":
                 JSONArray setArr = (JSONArray) observed.get("value");
                 val = setArr.toString();
                 len = (int) observed.get("length");
-                assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
-                assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, "\"Set\"")); // hardcoding set for caps
-                assertions.add(isoSelector.getAssertion(AssertKind.LENGTH, name, String.valueOf(len))); // TODO this won't work!
+                if (verbose) {
+                    assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
+                    assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, "\"Set\"")); // hardcoding set for caps
+                    assertions.add(isoSelector.getAssertion(AssertKind.LENGTH, name, String.valueOf(len))); // TODO this won't work!
+                }
                 assertions.add(isoSelector.getAssertion(AssertKind.DEEP_EQUAL, name, val));
                 break;
             case "promise":
-                assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, null));
+                if (verbose) {
+                    assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, null));
+                }
                 assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, "\"promise\""));
                 break;
             case "error":
-                assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, null));
+                if (verbose) {
+                    assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, null));
+                }
                 assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, "\"error\""));
                 break;
             case "object":
                 JSONObject subObj = (JSONObject) observed.get("value");
                 val = subObj.toString();
-                assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
-                assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
+                if (verbose) {
+                    assertions.add(isoSelector.getAssertion(AssertKind.EXIST, name, val));
+                    assertions.add(isoSelector.getAssertion(AssertKind.TYPE, name, typeQuoted));
+                }
                 assertions.add(isoSelector.getAssertion(AssertKind.DEEP_EQUAL, name, val));
                 break;
             case "fail":

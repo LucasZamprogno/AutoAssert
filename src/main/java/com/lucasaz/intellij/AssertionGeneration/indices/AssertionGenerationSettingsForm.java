@@ -10,6 +10,7 @@ public class AssertionGenerationSettingsForm {
     private JPanel jPanel;
     private JCheckBox buildAll;
     private JCheckBox autoSelect;
+    private JCheckBox verboseAssertions;
     private JComboBox<String> tsconfigDropdown;
     private JPanel AssertionConfiguration;
     private JComboBox<String> nullIsomorphism;
@@ -32,6 +33,8 @@ public class AssertionGenerationSettingsForm {
     public boolean getAuto() {
         return this.autoSelect.isSelected();
     }
+
+    public boolean getVerbose() { return this.verboseAssertions.isSelected(); }
 
     public JButton getScanButton() {
         return this.scanProjectButton;
@@ -65,10 +68,11 @@ public class AssertionGenerationSettingsForm {
         return jPanel;
     }
 
-    public void setAll(List<String> dropdownOptions, String selected, boolean build, boolean auto) {
+    public void setAll(List<String> dropdownOptions, String selected, boolean build, boolean auto, boolean verbose) {
         this.setupDropdown(dropdownOptions, selected);
         this.buildAll.setSelected(build);
         this.autoSelect.setSelected(auto);
+        this.verboseAssertions.setSelected(verbose);
         this.setEnabledStates();
     }
 
