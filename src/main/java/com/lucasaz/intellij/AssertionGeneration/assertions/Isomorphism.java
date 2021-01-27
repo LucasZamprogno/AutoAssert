@@ -22,6 +22,6 @@ public class Isomorphism {
     }
 
     public boolean matchesTemplate(Assertion assertion) {
-        return comparator.match(assertion);
+        return comparator != null && comparator.match(assertion);
     }
 }

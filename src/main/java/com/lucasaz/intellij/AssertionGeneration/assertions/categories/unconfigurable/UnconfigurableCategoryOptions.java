@@ -1,6 +1,5 @@
 package com.lucasaz.intellij.AssertionGeneration.assertions.categories.unconfigurable;
 
-import com.lucasaz.intellij.AssertionGeneration.assertions.AssertKind;
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertionComparator;
 import com.lucasaz.intellij.AssertionGeneration.assertions.Isomorphism;
 import com.lucasaz.intellij.AssertionGeneration.assertions.categories.CategoryOptions;

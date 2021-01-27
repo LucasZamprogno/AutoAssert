@@ -13,6 +13,7 @@ import java.io.IOException;
 @AllArgsConstructor
 public class Target {
 	String text;
+
 	boolean includesPropertyAccess;
 	boolean includesCallExpression;
 	boolean includesIdentifier;

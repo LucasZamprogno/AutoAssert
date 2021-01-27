@@ -28,7 +28,7 @@ public class EqualitySpecifier {
 
     public static boolean isInEqualityCategory(Assertion assertion) {
         for (PropertyAccess propertyAccess : assertion.getPropertyAccesses()) {
-            String keyword = propertyAccess.getText();
+            String keyword = propertyAccess.getName();
             if (equalityKeywords.contains(keyword)) {
                 return true;
             }

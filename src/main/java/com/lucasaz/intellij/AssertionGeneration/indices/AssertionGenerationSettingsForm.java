@@ -23,7 +23,12 @@ public class AssertionGenerationSettingsForm {
     private JButton scanProjectButton;
 
     public String getPath() {
-        return this.tsconfigDropdown.getSelectedItem().toString();
+        try {
+            return this.tsconfigDropdown.getSelectedItem().toString();
+        } catch (NullPointerException nullPointerException) {
+            return "";
+        }
+
     }
 
     public boolean getBuild() {

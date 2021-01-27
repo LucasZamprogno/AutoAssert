@@ -52,7 +52,7 @@ public class Category {
     }
 
     private boolean matchesCategory(Assertion assertion) {
-        return comparator.match(assertion);
+        return comparator != null && comparator.match(assertion);
     }
 
     public Isomorphism calculatePopularIsomorphism(Collection<Assertion> assertions) {

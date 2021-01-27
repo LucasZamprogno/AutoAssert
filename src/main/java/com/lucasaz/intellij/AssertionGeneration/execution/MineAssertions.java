@@ -168,15 +168,15 @@ public class MineAssertions {
 	private static void saveAssertionData(Collection<Assertion> assertions, BufferedWriter bufferedWriter) {
 		for (Assertion assertion : assertions) {
 			for (PropertyAccess propertyAccess : assertion.getPropertyAccesses()) {
-				if (!propertyCounts.containsKey(propertyAccess.getText())) {
-					propertyCounts.put(propertyAccess.getText(), 0);
+				if (!propertyCounts.containsKey(propertyAccess.getName())) {
+					propertyCounts.put(propertyAccess.getName(), 0);
 				}
-				propertyCounts.put(propertyAccess.getText(),
-						propertyCounts.get(propertyAccess.getText()) + 1);
+				propertyCounts.put(propertyAccess.getName(),
+						propertyCounts.get(propertyAccess.getName()) + 1);
 			}
 			if (assertion.getPropertyAccesses().get(0) instanceof Call) {
 				Call call = (Call) assertion.getPropertyAccesses().get(0);
-				if (call.getArguments().size() > 0 && call.getText().equals("expect")) {
+				if (call.getArguments().size() > 0 && call.getName().equals("expect")) {
 					expectCount++;
 					expectKeywordCounts.add(assertion.getPropertyAccesses().size());
 					Target assertingOn = call.getArguments().get(0);
@@ -319,7 +319,7 @@ public class MineAssertions {
 	private static void addToSet(Collection<Assertion> assertions, Set<String> set) {
 		for (Assertion assertion : assertions) {
 			for (PropertyAccess propertyAccess : assertion.getPropertyAccesses()) {
-				set.add(propertyAccess.getText());
+				set.add(propertyAccess.getName());
 			}
 		}
 	}

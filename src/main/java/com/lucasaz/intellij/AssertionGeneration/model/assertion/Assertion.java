@@ -5,7 +5,6 @@ import com.eclipsesource.v8.V8Object;
 import com.lucasaz.intellij.AssertionGeneration.services.TypeScript;
 import com.lucasaz.intellij.AssertionGeneration.visitors.impl.TypeScriptVisitor;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -105,13 +104,13 @@ public class Assertion {
 
 	public Target getLHS() {
 		PropertyAccess propertyAccess = this.getPropertyAccesses().get(0);
-		if (propertyAccess.getText().equals("expect") && propertyAccess instanceof Call) {
+		if (propertyAccess.getName().equals("expect") && propertyAccess instanceof Call) {
 			Call call = (Call) propertyAccess;
 			if (call.getArguments().size() > 0) {
 				return call.getArguments().get(0);
 			}
 		}
-		if (propertyAccess.getText().equals("assert")) {
+		if (propertyAccess.getName().equals("assert")) {
 			if (getPropertyAccesses().size() > 0 && getPropertyAccesses().get(1) instanceof Call) {
 				Call call = (Call) getPropertyAccesses().get(1);
 				return call.getArguments().get(0);
@@ -123,7 +122,7 @@ public class Assertion {
 	public List<Target> getRHS() {
 		PropertyAccess propertyAccess = this.getPropertyAccesses().get(0);
 		List<Target> targets = new ArrayList<>();
-		if (propertyAccess.getText().equals("expect")) {
+		if (propertyAccess.getName().equals("expect")) {
 			for (int i = 1; i < getPropertyAccesses().size(); i = i + 1) {
 				PropertyAccess rhsPropertyAccess = getPropertyAccesses().get(i);
 				if (rhsPropertyAccess instanceof Call) {
@@ -131,7 +130,7 @@ public class Assertion {
 					targets.addAll(call.getArguments());
 				}
 			}
-		} else if (propertyAccess.getText().equals("assert")) {
+		} else if (propertyAccess.getName().equals("assert")) {
 			if (getPropertyAccesses().size() > 0 && getPropertyAccesses().get(1) instanceof Call) {
 				Call call = (Call) getPropertyAccesses().get(1);
 				for (int i = 1; i < call.getArguments().size(); i = i + 1) {
@@ -145,8 +144,8 @@ public class Assertion {
 	public boolean isExpectingValue() {
 		if (getPropertyAccesses().get(0) instanceof Call) {
 			Call call = (Call) getPropertyAccesses().get(0);
-			return (call.getArguments().size() > 0 && call.getText().equals("expect"));
-		} else if (getPropertyAccesses().get(0).getText().equals("assert")) {
+			return (call.getArguments().size() > 0 && call.getName().equals("expect"));
+		} else if (getPropertyAccesses().get(0).getName().equals("assert")) {
 			if (getPropertyAccesses().size() > 0 && getPropertyAccesses().get(1) instanceof Call) {
 				Call call = (Call) getPropertyAccesses().get(1);
 				return call.getArguments().size() > 0;
@@ -184,10 +183,15 @@ public class Assertion {
 		List<PropertyAccess> tokens = getPropertyAccesses();
 		JSONArray tokenArray = new JSONArray();
 		for (PropertyAccess token : tokens) {
-			tokenArray.put(token.getText());
+			tokenArray.put(token.getName());
 		}
 		json.put("token", tokenArray);
 		json.put("original", toString());
 		return json;
+	}
+
+	public boolean lastPropertyIsCall() {
+		PropertyAccess lastPropertyAccess = propertyAccesses.get(propertyAccesses.size() - 1);
+		return lastPropertyAccess instanceof Call;
 	}
 }

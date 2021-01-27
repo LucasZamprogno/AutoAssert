@@ -3,7 +3,9 @@ package com.lucasaz.intellij.AssertionGeneration.assertions.categories.configura
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertKind;
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertionComparator;
 import com.lucasaz.intellij.AssertionGeneration.assertions.Isomorphism;
+import com.lucasaz.intellij.AssertionGeneration.model.assertion.Assertion;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class BooleanOptions extends ConfigurableCategoryOptions {
@@ -16,11 +18,19 @@ public class BooleanOptions extends ConfigurableCategoryOptions {
 
     @Override
     public AssertionComparator getComparator() {
-        return null;
+        return new AssertionComparator() {
+            public boolean match(Assertion assertion) {
+                // TODO ensure it is also an expect
+                return assertion.toString().contains("true") || assertion.toString().contains("false");
+            }
+        };
     }
 
     @Override
     public List<Isomorphism> getIsomorphisms() {
-        return null;
+        return Arrays.asList(
+                new Isomorphism("expect(LHS).to.be.RHS;", endsWithPropComparator),
+                new Isomorphism("expect(LHS).to.equal(RHS);", endsWithCallComparator)
+        );
     }
 }

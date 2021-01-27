@@ -4,6 +4,8 @@ import com.lucasaz.intellij.AssertionGeneration.assertions.AssertKind;
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertionComparator;
 import com.lucasaz.intellij.AssertionGeneration.assertions.Isomorphism;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class LengthOptions extends ConfigurableCategoryOptions {
@@ -21,6 +23,6 @@ public class LengthOptions extends ConfigurableCategoryOptions {
 
     @Override
     public List<Isomorphism> getIsomorphisms() {
-        return null;
+        return Collections.singletonList(new Isomorphism("STUB", null));
     }
 }
