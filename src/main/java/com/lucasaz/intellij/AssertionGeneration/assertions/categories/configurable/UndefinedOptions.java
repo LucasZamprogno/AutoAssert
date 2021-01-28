@@ -3,13 +3,14 @@ package com.lucasaz.intellij.AssertionGeneration.assertions.categories.configura
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertKind;
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertionComparator;
 import com.lucasaz.intellij.AssertionGeneration.assertions.Isomorphism;
+import com.lucasaz.intellij.AssertionGeneration.model.assertion.Assertion;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class UndefinedOptions extends ConfigurableCategoryOptions {
-    // private static final String[] UNDEFINED_OPTIONS = {"expect(LHS).to.be.undefined;", "expect(LHS).to.equal(undefined);"};
 
     @Override
     public AssertKind getKind() {
@@ -18,11 +19,23 @@ public class UndefinedOptions extends ConfigurableCategoryOptions {
 
     @Override
     public AssertionComparator getComparator() {
-        return null;
+        return new AssertionComparator() {
+            public boolean match(Assertion assertion) {
+                return assertion.isExpect() &&
+                        (assertion.hasPropertyNamed("undefined") ||
+                        assertion.hasCallWithArg("undefined") ||
+                        assertion.hasCallWithArg("\"undefined\"") ||
+                        assertion.hasCallWithArg("'undefined'") ||
+                        assertion.hasCallWithArg("`undefined`"));
+            }
+        };
     }
 
     @Override
     public List<Isomorphism> getIsomorphisms() {
-        return Collections.singletonList(new Isomorphism("STUB", null));
+        return Arrays.asList(
+                new Isomorphism("expect(LHS).to.be.undefined;", endsWithPropComparator),
+                new Isomorphism("expect(LHS).to.equal(undefined);", endsWithCallComparator)
+        );
     }
 }

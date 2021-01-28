@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BooleanOptions extends ConfigurableCategoryOptions {
-    // private static final String[] BOOLEAN_OPTIONS = {"expect(LHS).to.be.RHS;", "expect(LHS).to.equal(RHS);"};
 
     @Override
     public AssertKind getKind() {
@@ -20,8 +19,11 @@ public class BooleanOptions extends ConfigurableCategoryOptions {
     public AssertionComparator getComparator() {
         return new AssertionComparator() {
             public boolean match(Assertion assertion) {
-                // TODO ensure it is also an expect
-                return assertion.toString().contains("true") || assertion.toString().contains("false");
+                return  assertion.isExpect() &&
+                        (assertion.hasPropertyNamed("true") ||
+                        assertion.hasPropertyNamed("false") ||
+                        assertion.hasCallWithArg("true") ||
+                        assertion.hasCallWithArg("false"));
             }
         };
     }

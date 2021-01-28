@@ -194,4 +194,39 @@ public class Assertion {
 		PropertyAccess lastPropertyAccess = propertyAccesses.get(propertyAccesses.size() - 1);
 		return lastPropertyAccess instanceof Call;
 	}
+
+	public boolean isExpect() {
+		return getPropertyAccesses().get(0).getName().equals("expect");
+	}
+
+	public boolean hasPropertyNamed(String name) {
+		for (PropertyAccess prop : propertyAccesses) {
+			if (!(prop instanceof Call) && prop.getName().equals(name)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean hasCallNamed(String name) {
+		for (PropertyAccess prop : propertyAccesses) {
+			if (prop instanceof Call && prop.getName().equals(name)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean hasCallWithArg(String arg) {
+		for (PropertyAccess prop : propertyAccesses) {
+			if (prop instanceof Call) {
+				for (Target argument : ((Call) prop).getArguments()) {
+					if (argument.toString().equals(arg)) {
+						return true; // n e s t i n g
+					}
+				}
+			}
+		}
+		return false;
+	}
 }

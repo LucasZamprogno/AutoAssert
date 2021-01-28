@@ -3,13 +3,15 @@ package com.lucasaz.intellij.AssertionGeneration.assertions.categories.configura
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertKind;
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertionComparator;
 import com.lucasaz.intellij.AssertionGeneration.assertions.Isomorphism;
+import com.lucasaz.intellij.AssertionGeneration.model.assertion.Assertion;
+import com.lucasaz.intellij.AssertionGeneration.model.assertion.PropertyAccess;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class EqualityOptions extends ConfigurableCategoryOptions {
-    // private static final String[] EQUALITY_OPTIONS = {"expect(LHS).to.equal(RHS);", "expect(LHS).to.eq(RHS);"};
 
     @Override
     public AssertKind getKind() {
@@ -18,11 +20,30 @@ public class EqualityOptions extends ConfigurableCategoryOptions {
 
     @Override
     public AssertionComparator getComparator() {
-        return null;
+        return new AssertionComparator() {
+            public boolean match(Assertion assertion) {
+                return assertion.isExpect() &&
+                        (assertion.hasCallNamed("equal") ||
+                        assertion.hasCallNamed("eq"));
+            }
+        };
     }
 
     @Override
     public List<Isomorphism> getIsomorphisms() {
-        return Collections.singletonList(new Isomorphism("STUB", null));
+        return Arrays.asList(
+                new Isomorphism("expect(LHS).to.equal(RHS);", new AssertionComparator() {
+                    @Override
+                    public boolean match(Assertion assertion) {
+                        return assertion.hasCallNamed("equal");
+                    }
+                }),
+                new Isomorphism("expect(LHS).to.eq(RHS);", new AssertionComparator() {
+                    @Override
+                    public boolean match(Assertion assertion) {
+                        return assertion.hasCallNamed("eq");
+                    }
+                })
+        );
     }
 }

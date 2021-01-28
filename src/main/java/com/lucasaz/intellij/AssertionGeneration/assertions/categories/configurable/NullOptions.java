@@ -3,13 +3,14 @@ package com.lucasaz.intellij.AssertionGeneration.assertions.categories.configura
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertKind;
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertionComparator;
 import com.lucasaz.intellij.AssertionGeneration.assertions.Isomorphism;
+import com.lucasaz.intellij.AssertionGeneration.model.assertion.Assertion;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class NullOptions extends ConfigurableCategoryOptions {
-    // private static final String[] NULL_OPTIONS = {"expect(LHS).to.be.null;", "expect(LHS).to.equal(null);"};
 
     @Override
     public AssertKind getKind() {
@@ -18,11 +19,18 @@ public class NullOptions extends ConfigurableCategoryOptions {
 
     @Override
     public AssertionComparator getComparator() {
-        return null;
+        return new AssertionComparator() {
+            public boolean match(Assertion assertion) {
+                return assertion.isExpect() && (assertion.hasPropertyNamed("null") || assertion.hasCallWithArg("null"));
+            }
+        };
     }
 
     @Override
     public List<Isomorphism> getIsomorphisms() {
-        return Collections.singletonList(new Isomorphism("STUB", null));
+        return Arrays.asList(
+                new Isomorphism("expect(LHS).to.be.null;", endsWithPropComparator),
+                new Isomorphism("expect(LHS).to.equal(null);", endsWithCallComparator)
+        );
     }
 }

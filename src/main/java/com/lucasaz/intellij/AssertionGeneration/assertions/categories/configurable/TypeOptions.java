@@ -3,13 +3,22 @@ package com.lucasaz.intellij.AssertionGeneration.assertions.categories.configura
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertKind;
 import com.lucasaz.intellij.AssertionGeneration.assertions.AssertionComparator;
 import com.lucasaz.intellij.AssertionGeneration.assertions.Isomorphism;
+import com.lucasaz.intellij.AssertionGeneration.model.assertion.Assertion;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class TypeOptions extends ConfigurableCategoryOptions {
-    // private static final String[] TYPE_OPTIONS = {"expect(LHS).to.be.a(RHS);", "expect(LHS).to.be.an(RHS);"};
+
+    private boolean a(Assertion assertion) {
+        return assertion.hasCallNamed("a");
+    }
+
+    private boolean an(Assertion assertion) {
+        return assertion.hasCallNamed("an");
+    }
 
     @Override
     public AssertKind getKind() {
@@ -17,12 +26,30 @@ public class TypeOptions extends ConfigurableCategoryOptions {
     }
 
     @Override
+    // This one will be replaced
     public AssertionComparator getComparator() {
-        return null;
+        return new AssertionComparator() {
+            public boolean match(Assertion assertion) {
+                return assertion.isExpect() && (a(assertion) || an(assertion));
+            }
+        };
     }
 
     @Override
     public List<Isomorphism> getIsomorphisms() {
-        return Collections.singletonList(new Isomorphism("STUB", null));
+        return Arrays.asList(
+                new Isomorphism("expect(LHS).to.be.a(RHS);", new AssertionComparator() {
+                    @Override
+                    public boolean match(Assertion assertion) {
+                        return a(assertion);
+                    }
+                }),
+                new Isomorphism("expect(LHS).to.be.an(RHS);", new AssertionComparator() {
+                    @Override
+                    public boolean match(Assertion assertion) {
+                        return an(assertion);
+                    }
+                })
+        );
     }
 }
