@@ -1,5 +1,7 @@
 # AutoAssert
 
+A short demo video can be found here: https://www.youtube.com/watch?v=w1MoeZxfJko
+
 ## Thesis abstract
 
 Test cases use assertions to check program behaviour. 
