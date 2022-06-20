@@ -12,7 +12,7 @@ def smush_extra_info_downward(results):
         for assertion in result["assertions"]:
             assertion["ours"] = ours
             assertion["path"] = path
-            
+
 
 def get_our_clusters(assertions):
     clusters = []
@@ -33,7 +33,7 @@ def get_our_clusters(assertions):
         else:
             clusters.append("Wat")
     return clusters
-    
+
 def get_cluster_from_token(token):
     if token in ["equal", "eql", "toEqual", "eq", "equals", "toStrictEqual", "equalIgnoreSpaces", "deepEqual", "strictEqual", "deepStrictEqual", "notEqual", "notStrictEqual", "notDeepStrictEqual", "notDeepEqual", "toBe"]:
         cluster = "equality"
@@ -153,9 +153,13 @@ def match_breakdown():
     }
     for res in pass_res:
         assertions = res["assertions"]
-        our_clusters = get_our_clusters(res["ours"].split("\n"))
+        our_clusters = get_our_clusters(res["ours"].strip().split("\n"))
+        our_tags_set = set()
+        [our_tags_set.add(x) for x in our_clusters]
+        their_tags_set = set()
         for assertion in assertions:
             their_clusters = get_clusters_from_assertion(assertion)
+            [their_tags_set.add(x) for x in their_clusters]
             for cluster in their_clusters:
                 if cluster not in scores:
                     scores[cluster] = {
@@ -172,6 +176,8 @@ def match_breakdown():
                     scores["total"]["miss"] += 1
                     scores[cluster]["miss"] += 1
                     scores[cluster]["misses"].append(assertion)
+        res['our-tags'] = list(our_tags_set)
+        res['their-tags'] = list(their_tags_set)
     final = {}
     for score in scores:
         hit = scores[score]["hit"]
@@ -217,8 +223,32 @@ for top_level_repo in repos:
     # print("Pass:", len(pass_res))
     # print("Fail:", len(fail_res))
 
+
+def create_csv(results):
+    header = ["PATH","THEIR_ASSERTIONS","OUR_ASSERTIONS","THEIR_TAGS","OUR_TAGS"]
+    def make_csv_friendly(content):
+        return content.replace('"', '\\"').replace('\n', '\\n').replace('\r', '\\r')
+    def create_row(result):
+        theirs = make_csv_friendly(result['theirs'])
+        ours = make_csv_friendly(result['ours'])
+        their_tags = ','.join(result['their-tags'])
+        our_tags = ','.join(result['our-tags'])
+        return [result['path'], theirs, ours, their_tags, our_tags]
+    rows = [create_row(result) for result in results]
+
+    import csv
+    with open('results.csv', 'w', newline='') as csvfile:
+        spamwriter = csv.writer(csvfile, delimiter=',',
+                                quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        spamwriter.writerow(header)
+        for row in rows:
+            spamwriter.writerow(row)
+
+
 smush_extra_info_downward(pass_res)
 # pct_breakdown()
-# match_breakdown()
+match_breakdown()
+csv = create_csv(pass_res)
+
 # get_timeouts()
-get_diff_count()
+# get_diff_count()
